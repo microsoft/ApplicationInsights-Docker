@@ -1,3 +1,7 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '1.2.1'
+}
+
 apply plugin: 'java'
 
 version = '0.9'
@@ -8,11 +12,10 @@ repositories {
 
 dependencies {
     compile 'com.microsoft.azure:applicationinsights-core:1.0.0'
+    compile group: 'com.google.code.gson', name: 'gson', version: '1.7.2'
 
     testCompile 'junit:junit:4.11'
 }
-
-// TODO: use shadow copy? need dependencies.
 
 // region Prepare Docker build folder
 
@@ -32,6 +35,13 @@ task copyApplicationLibs(type: Copy) {
     into "$rootDir/build/docker"
 }
 
-tasks.jar.finalizedBy copyPythonScripts, copyDockerFiles, copyApplicationLibs
+// Creating a fat-jar instead of the original one, to be added to the image more easily.
+jar.enabled = false
+tasks.shadowJar.finalizedBy copyPythonScripts, copyDockerFiles, copyApplicationLibs
+
+shadowJar {
+    classifier = ''
+}
+
 
 // endregion Prepare Docker build folder
