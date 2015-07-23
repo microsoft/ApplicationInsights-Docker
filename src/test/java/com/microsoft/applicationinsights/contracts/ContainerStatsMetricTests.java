@@ -32,10 +32,10 @@ public class ContainerStatsMetricTests {
         Assert.assertEquals(DOCKER_IMAGE, containerStatsMetric.getDockerImage());
         Assert.assertEquals(DOCKER_CONTAINER_NAME, containerStatsMetric.getDockerContainerName());
         Assert.assertEquals(DOCKER_CONTAINER_ID, containerStatsMetric.getDockerContainerId());
-        Assert.assertEquals(VALUE, containerStatsMetric.getValue(), 0);
-        Assert.assertEquals(MIN, containerStatsMetric.getMin(), 0);
-        Assert.assertEquals(MAX, containerStatsMetric.getMax(), 0);
-        Assert.assertEquals(STD_DEV, containerStatsMetric.getStdDev(), 0);
+        Assert.assertEquals(VALUE, containerStatsMetric.getValue(), 0.001);
+        Assert.assertEquals(MIN, containerStatsMetric.getMin(), 0.001);
+        Assert.assertEquals(MAX, containerStatsMetric.getMax(), 0.001);
+        Assert.assertEquals(STD_DEV, containerStatsMetric.getStdDev(), 0.001);
         Assert.assertEquals(COUNT, containerStatsMetric.getCount());
     }
 }

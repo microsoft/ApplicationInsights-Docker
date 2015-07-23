@@ -18,7 +18,7 @@ class DockerCollector(object):
     def __init__(self, docker_client, samples_in_each_metric=2, send_event=print):
         super().__init__()
         self._docker_client = docker_client
-        self._samples_in_each_metric = samples_in_each_metric,
+        self._samples_in_each_metric = samples_in_each_metric
         self._send_event = send_event
 
     def collect_and_send(self):
@@ -75,8 +75,8 @@ class DockerCollector(object):
         cpu_metric = DockerCollector._get_cpu_metric(json_stats=json_stats)
         memory_metric = DockerCollector._get_simple_metric(
             json_stats=json_stats,
-            func=lambda stat: (100.0 * stat['memory_stats']['usage']) / stat['memory_stats']['limit'],
-            metric_name='docker-memory-usage')
+            func=lambda stat: stat['memory_stats']['limit'] - stat['memory_stats']['usage'],
+            metric_name='docker-available-memory')
 
         rx_bytes_metric = DockerCollector._get_simple_metric(
             json_stats=json_stats,
