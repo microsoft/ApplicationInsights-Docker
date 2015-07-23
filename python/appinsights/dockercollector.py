@@ -18,7 +18,7 @@ class DockerCollector(object):
     def __init__(self, docker_client, samples_in_each_metric=2, send_event=print):
         super().__init__()
         self._docker_client = docker_client
-        self._samples_in_each_metric = samples_in_each_metric,
+        self._samples_in_each_metric = samples_in_each_metric
         self._send_event = send_event
 
     def collect_and_send(self):
@@ -34,7 +34,6 @@ class DockerCollector(object):
                            container_stats in
                            host_stats.container_stats]
         self._send_metrics(list_ai_metrics=list_ai_metrics)
-        print('sent: {0} containers metrics'.format(len(list_ai_metrics)))
 
     def _send_metrics(self, list_ai_metrics):
         for ai_metrics in list_ai_metrics:

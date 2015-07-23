@@ -44,10 +44,14 @@ public class PythonBootstrapper {
 
             BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-            String metricsJson = in.readLine();
-            ContainerStatsMetric containerStatsMetric = new ContainerStatsMetric(metricsJson);
-            MetricTelemetry metricTelemetry = createMetricTelemetry(containerStatsMetric);
-            telemetryClient.trackMetric(metricTelemetry);
+            String metricsJson;
+            while ((metricsJson = in.readLine()) != null) {
+                ContainerStatsMetric containerStatsMetric = new ContainerStatsMetric(metricsJson);
+                MetricTelemetry metricTelemetry = createMetricTelemetry(containerStatsMetric);
+                telemetryClient.trackMetric(metricTelemetry);
+            }
+
+            System.out.println("Finished consuming metrics.");
         } catch (IOException e) {
             System.out.println(this.getClass().getSimpleName() + " failed with error: " + e.getMessage());
         }

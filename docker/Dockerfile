@@ -9,4 +9,4 @@ COPY . /usr/docker
 WORKDIR /usr/docker
 
 # TODO: library version as parameter.
-CMD ["java","-cp", "/usr/docker/ApplicationInsights-Docker-0.9.jar", "com.microsoft.applicationinsights.agent.DockerAgent"]
+ENTRYPOINT ["java","-cp", "/usr/docker/ApplicationInsights-Docker-0.9.jar", "com.microsoft.applicationinsights.agent.DockerAgent"]

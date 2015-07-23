@@ -23,6 +23,6 @@ public class DockerAgent {
         System.out.println("Starting Python bootsrapper");
         pythonBootstrapper.start();
 
-        System.out.println("Instrumentation key required.");
+        System.out.println("Exiting...");
     }
 }
