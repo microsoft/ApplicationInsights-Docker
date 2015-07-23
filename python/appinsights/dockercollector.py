@@ -34,7 +34,6 @@ class DockerCollector(object):
                            container_stats in
                            host_stats.container_stats]
         self._send_metrics(list_ai_metrics=list_ai_metrics)
-        print('sent: {0} containers metrics'.format(len(list_ai_metrics)))
 
     def _send_metrics(self, list_ai_metrics):
         for ai_metrics in list_ai_metrics:
