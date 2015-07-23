@@ -21,7 +21,7 @@ dependencies {
 
 task copyPythonScripts(type: Copy) {
     from "$rootDir/python"
-    into "$rootDir/build/docker"
+    into "$rootDir/build/docker/python"
     exclude "**/__pycache__", "**./.idea"
 }
 

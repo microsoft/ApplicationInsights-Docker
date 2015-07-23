@@ -8,7 +8,7 @@ import java.io.IOException;
  * The agent is executed by the Docker CMD command.
  */
 public class DockerAgent {
-    private static final String PYTHON_BOOTSTRAP_SCRIPT = "bootstrap.py";
+    private static final String PYTHON_BOOTSTRAP_SCRIPT = "python/bootstrap.py";
 
     public static void main(String[] args) throws IOException {
         if (args.length == 0) {
