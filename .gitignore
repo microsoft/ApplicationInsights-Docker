@@ -1,3 +1,8 @@
+# Python exclusions
+__pycache__/
+*.py[cod]
+*$py.class
+
 #Visual Studio files
 *.o
 *.d
