@@ -79,25 +79,21 @@ public class ContainerStatsMetric {
     // region Private Methods
 
     private void deserialize(String json) {
-        try {
-            JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
-            JsonObject metricJson = jsonObj.getAsJsonObject("metric");
+        JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
+        JsonObject metricJson = jsonObj.getAsJsonObject("metric");
 
-            this.metricName = metricJson.get("name").getAsString();
-            this.value = metricJson.get("value").getAsDouble();
-            this.count = metricJson.get("count").getAsInt();
-            this.min = metricJson.get("min").getAsDouble();
-            this.max = metricJson.get("max").getAsDouble();
-            this.stdDev = metricJson.get("std").getAsDouble();
+        this.metricName = metricJson.get("name").getAsString();
+        this.value = metricJson.get("value").getAsDouble();
+        this.count = metricJson.get("count").getAsInt();
+        this.min = metricJson.get("min").getAsDouble();
+        this.max = metricJson.get("max").getAsDouble();
+        this.stdDev = metricJson.get("std").getAsDouble();
 
-            JsonObject propertiesJson = jsonObj.getAsJsonObject("properties");
-            this.dockerHost = propertiesJson.get("docker-host").getAsString();
-            this.dockerImage = propertiesJson.get("docker-image").getAsString();
-            this.dockerContainerName = propertiesJson.get("docker-container-name").getAsString();
-            this.dockerContainerId = propertiesJson.get("docker-container-id").getAsString();
-        } catch (Exception e) {
-            System.out.println("Failed to parse Docker container stats metric with exception: " + e.getMessage());
-        }
+        JsonObject propertiesJson = jsonObj.getAsJsonObject("properties");
+        this.dockerHost = propertiesJson.get("docker-host").getAsString();
+        this.dockerImage = propertiesJson.get("docker-image").getAsString();
+        this.dockerContainerName = propertiesJson.get("docker-container-name").getAsString();
+        this.dockerContainerId = propertiesJson.get("docker-container-id").getAsString();
     }
 
     // endregion Private Methods

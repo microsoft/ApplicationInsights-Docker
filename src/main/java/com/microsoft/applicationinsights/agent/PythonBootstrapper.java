@@ -17,65 +17,35 @@ public class PythonBootstrapper {
 
     // region Members
 
+    private final String PYTHON_EXE_NAME = "python";
     private String pythonScriptName;
-    private TelemetryClient telemetryClient;
 
     // endregion Members
 
     // region Ctor
 
-    public PythonBootstrapper(String pythonScriptName, String instrumentationKey) {
+    public PythonBootstrapper(String pythonScriptName) {
         this.pythonScriptName = pythonScriptName;
-
-        TelemetryConfiguration telemetryConfiguration = TelemetryConfiguration.getActive();
-        telemetryConfiguration.setInstrumentationKey(instrumentationKey);
-        this.telemetryClient = new TelemetryClient(telemetryConfiguration);
     }
 
     // endregion Ctor
 
     // region Public
 
-    public void start() {
-        ProcessBuilder pb = new ProcessBuilder("python", this.pythonScriptName);
+    public MetricProvider start() throws IOException {
+        ProcessBuilder pb = new ProcessBuilder(PYTHON_EXE_NAME, this.pythonScriptName);
+        Process process;
 
         try {
-            Process p = pb.start();
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-            String metricsJson;
-            while ((metricsJson = in.readLine()) != null) {
-                ContainerStatsMetric containerStatsMetric = new ContainerStatsMetric(metricsJson);
-                MetricTelemetry metricTelemetry = createMetricTelemetry(containerStatsMetric);
-                telemetryClient.trackMetric(metricTelemetry);
-            }
-
-            System.out.println("Finished consuming metrics.");
+            process = pb.start();
         } catch (IOException e) {
-            System.out.println(this.getClass().getSimpleName() + " failed with error: " + e.getMessage());
+            System.out.println(this.getClass().getSimpleName() + " failed to start python process with error: " + e.getMessage());
+
+            throw e;
         }
+
+        return new MetricProvider(new BufferedReader(new InputStreamReader(process.getInputStream())));
     }
 
     // endregion Public
-
-    // region Private
-
-    private MetricTelemetry createMetricTelemetry(ContainerStatsMetric containerStatsMetric) {
-        MetricTelemetry metricTelemetry = new MetricTelemetry(containerStatsMetric.getMetricName(), containerStatsMetric.getValue());
-        metricTelemetry.setMin(containerStatsMetric.getMin());
-        metricTelemetry.setMax(containerStatsMetric.getMax());
-        metricTelemetry.setCount(containerStatsMetric.getCount());
-        metricTelemetry.setStandardDeviation(containerStatsMetric.getStdDev());
-
-        Map<String, String> properties = metricTelemetry.getProperties();
-        properties.put("docker-host", containerStatsMetric.getDockerHost());
-        properties.put("docker-image", containerStatsMetric.getDockerImage());
-        properties.put("docker-container-name", containerStatsMetric.getDockerContainerName());
-        properties.put("docker-container-id", containerStatsMetric.getDockerContainerId());
-
-        return metricTelemetry;
-    }
-
-    // endregion Private
 }

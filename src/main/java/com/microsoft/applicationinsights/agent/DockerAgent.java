@@ -1,28 +1,67 @@
 package com.microsoft.applicationinsights.agent;
 
+import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
+
 import java.io.IOException;
 
 /**
- * Created by yonisha on 7/22/2015.
- *
- * The agent is executed by the Docker CMD command.
+ * Created by yonisha on 7/23/2015.
  */
 public class DockerAgent {
+
     private static final String PYTHON_BOOTSTRAP_SCRIPT = "python/bootstrap.py";
+    private String instrumentationKey;
 
-    public static void main(String[] args) throws IOException {
-        if (args.length == 0) {
-            System.out.println("Instrumentation key required.");
+    // region Ctor
 
-            return;
+    public DockerAgent(String instrumentationKey) {
+        this.instrumentationKey = instrumentationKey;
+    }
+
+    // endregion Ctor
+
+    // region Public
+
+    public void run() throws IOException {
+        System.out.println("Starting Python bootsrapper");
+        PythonBootstrapper pythonBootstrapper = new PythonBootstrapper(PYTHON_BOOTSTRAP_SCRIPT);
+        MetricProvider metricProvider = pythonBootstrapper.start();
+        System.out.println("Python process is running.");
+
+        ApplicationInsightsSender applicationInsightsSender = new ApplicationInsightsSender(this.instrumentationKey);
+
+        collectMetrics(metricProvider, applicationInsightsSender);
+    }
+
+    // endregion Public
+
+    // region Private
+
+    private static void collectMetrics(MetricProvider metricProvider, ApplicationInsightsSender applicationInsightsSender) {
+        System.out.println("Starting to collect metrics");
+
+        while (true) {
+            ContainerStatsMetric metric = getMetric(metricProvider);
+
+            if (metric == null) {
+                continue;
+            }
+
+            applicationInsightsSender.sentMetric(metric);
+        }
+    }
+
+    private static ContainerStatsMetric getMetric(MetricProvider metricProvider) {
+        ContainerStatsMetric nextMetric = null;
+
+        try {
+            nextMetric = metricProvider.getNext();
+        } catch (IOException e) {
+            System.out.println("Failed to fetch metric with error: " + e.getMessage());
         }
 
-        String instrumentationKey = args[0];
-        PythonBootstrapper pythonBootstrapper = new PythonBootstrapper(PYTHON_BOOTSTRAP_SCRIPT, instrumentationKey);
-
-        System.out.println("Starting Python bootsrapper");
-        pythonBootstrapper.start();
-
-        System.out.println("Exiting...");
+        return nextMetric;
     }
+
+    // endregion Private
 }
