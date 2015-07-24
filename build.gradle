@@ -15,6 +15,7 @@ dependencies {
     compile group: 'com.google.code.gson', name: 'gson', version: '1.7.2'
 
     testCompile 'junit:junit:4.11'
+    testCompile group: 'org.mockito', name: 'mockito-all', version: '1.8.0'
 }
 
 // region Prepare Docker build folder

@@ -1,6 +1,8 @@
 package com.microsoft.applicationinsights.agent;
 
+import com.google.gson.JsonSyntaxException;
 import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
+import com.microsoft.applicationinsights.telemetry.MetricTelemetry;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,7 +23,18 @@ public class MetricProvider {
 
         ContainerStatsMetric containerStatsMetric = null;
         if (metricsJson != null) {
-            containerStatsMetric = new ContainerStatsMetric(metricsJson);
+            containerStatsMetric = createContainerStatsMetric(metricsJson);
+        }
+
+        return containerStatsMetric;
+    }
+
+    private ContainerStatsMetric createContainerStatsMetric(String json) {
+        ContainerStatsMetric containerStatsMetric = null;
+
+        try {
+            containerStatsMetric = new ContainerStatsMetric(json);
+        } catch (JsonSyntaxException e) {
         }
 
         return containerStatsMetric;

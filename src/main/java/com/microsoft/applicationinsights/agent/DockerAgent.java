@@ -5,31 +5,37 @@ import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
 import java.io.IOException;
 
 /**
- * Created by yonisha on 7/22/2015.
- *
- * The agent is executed by the Docker ENTRYPOINT command.
+ * Created by yonisha on 7/23/2015.
  */
 public class DockerAgent {
+
     private static final String PYTHON_BOOTSTRAP_SCRIPT = "python/bootstrap.py";
+    private String instrumentationKey;
 
-    public static void main(String[] args) throws IOException {
-        if (args.length == 0) {
-            System.out.println("Instrumentation key required.");
+    // region Ctor
 
-            return;
-        }
+    public DockerAgent(String instrumentationKey) {
+        this.instrumentationKey = instrumentationKey;
+    }
 
+    // endregion Ctor
+
+    // region Public
+
+    public void run() throws IOException {
         System.out.println("Starting Python bootsrapper");
         PythonBootstrapper pythonBootstrapper = new PythonBootstrapper(PYTHON_BOOTSTRAP_SCRIPT);
         MetricProvider metricProvider = pythonBootstrapper.start();
+        System.out.println("Python process is running.");
 
-        String instrumentationKey = args[0];
-        ApplicationInsightsSender applicationInsightsSender = new ApplicationInsightsSender(instrumentationKey);
+        ApplicationInsightsSender applicationInsightsSender = new ApplicationInsightsSender(this.instrumentationKey);
 
         collectMetrics(metricProvider, applicationInsightsSender);
-
-        System.out.println("Exiting...");
     }
+
+    // endregion Public
+
+    // region Private
 
     private static void collectMetrics(MetricProvider metricProvider, ApplicationInsightsSender applicationInsightsSender) {
         System.out.println("Starting to collect metrics");
@@ -56,4 +62,6 @@ public class DockerAgent {
 
         return nextMetric;
     }
+
+    // endregion Private
 }

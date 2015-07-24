@@ -15,10 +15,14 @@ import java.util.Map;
  */
 public class ApplicationInsightsSender {
     private final static String INSTANCE_NAME_TOTAL = "_Total";
-
     private TelemetryClient telemetryClient;
 
     // region Ctor
+
+    // Ctor for testability purposes.
+    protected ApplicationInsightsSender(TelemetryClient telemetryClient) {
+        this.telemetryClient = telemetryClient;
+    }
 
     public ApplicationInsightsSender(String instrumentationKey) {
         TelemetryConfiguration telemetryConfiguration = TelemetryConfiguration.getActive();
@@ -31,15 +35,15 @@ public class ApplicationInsightsSender {
     // region Public
 
     public void sentMetric(ContainerStatsMetric metric) {
-        Telemetry metricTelemetry = createMetricTelemetry(metric);
-        this.telemetryClient.track(metricTelemetry);
+        Telemetry telemetry = createTelemetry(metric);
+        this.telemetryClient.track(telemetry);
     }
 
     // endregion Public
 
     // region Private
 
-    private Telemetry createMetricTelemetry(ContainerStatsMetric containerStatsMetric) {
+    private Telemetry createTelemetry(ContainerStatsMetric containerStatsMetric) {
         Telemetry telemetry;
         String metricName = containerStatsMetric.getMetricName();
 

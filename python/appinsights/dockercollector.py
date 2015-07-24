@@ -74,7 +74,7 @@ class DockerCollector(object):
         cpu_metric = DockerCollector._get_cpu_metric(json_stats=json_stats)
         memory_metric = DockerCollector._get_simple_metric(
             json_stats=json_stats,
-            func=lambda stat: (100.0 * stat['memory_stats']['usage']) / stat['memory_stats']['limit'],
+            func=lambda stat: stat['memory_stats']['limit'] - stat['memory_stats']['usage'],
             metric_name='Available Bytes')
 
         rx_bytes_metric = DockerCollector._get_simple_metric(
