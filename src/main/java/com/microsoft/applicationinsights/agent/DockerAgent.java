@@ -1,6 +1,7 @@
 package com.microsoft.applicationinsights.agent;
 
 import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
+import com.microsoft.applicationinsights.python.PythonBootstrapper;
 
 import java.io.IOException;
 
@@ -8,59 +9,63 @@ import java.io.IOException;
  * Created by yonisha on 7/23/2015.
  */
 public class DockerAgent {
-
-    private static final String PYTHON_BOOTSTRAP_SCRIPT = "python/bootstrap.py";
-    private String instrumentationKey;
+    private ApplicationInsightsSender applicationInsightsSender;
+    private PythonBootstrapper pythonBootstrapper;
+    private boolean shouldStop = false;
 
     // region Ctor
 
-    public DockerAgent(String instrumentationKey) {
-        this.instrumentationKey = instrumentationKey;
+    public DockerAgent(PythonBootstrapper pythonBootstrapper, ApplicationInsightsSender applicationInsightsSender) {
+        this.applicationInsightsSender = applicationInsightsSender;
+        this.pythonBootstrapper = pythonBootstrapper;
     }
 
     // endregion Ctor
 
     // region Public
 
+    /**
+     * This method starts a Python process to collect Docker metrics.
+     * If, for any reason, the Python process exits, we start another process and continue to collect metrics.
+     * @throws IOException
+     */
     public void run() throws IOException {
-        System.out.println("Starting Python bootsrapper");
-        PythonBootstrapper pythonBootstrapper = new PythonBootstrapper(PYTHON_BOOTSTRAP_SCRIPT);
-        MetricProvider metricProvider = pythonBootstrapper.start();
-        System.out.println("Python process is running.");
 
-        ApplicationInsightsSender applicationInsightsSender = new ApplicationInsightsSender(this.instrumentationKey);
-
-        collectMetrics(metricProvider, applicationInsightsSender);
+        // TODO: check python exit code and check if killed intentionally.
+        while (true && !shouldStop) {
+            MetricProvider metricProvider = this.pythonBootstrapper.start();
+            collectAndSendMetrics(metricProvider, this.applicationInsightsSender);
+        }
     }
 
     // endregion Public
 
     // region Private
 
-    private static void collectMetrics(MetricProvider metricProvider, ApplicationInsightsSender applicationInsightsSender) {
-        System.out.println("Starting to collect metrics");
+    protected void stop() {
+        this.shouldStop = true;
+    }
+
+    private void collectAndSendMetrics(MetricProvider metricProvider, ApplicationInsightsSender applicationInsightsSender) {
+        System.out.println("Starting to collect metrics.");
 
         while (true) {
-            ContainerStatsMetric metric = getMetric(metricProvider);
+            ContainerStatsMetric metric = metricProvider.getNext();
 
+            // Metric can be null in two cases:
+            // 1) The underlying JSON is corrupted and cannot be serialized. In that case, make sure only metric JSONs
+            // strings are printed to the STDOUT in the python scripts. Any other user traces are not allowed.
+            // 2) The Python process has exited. In that case, the agent will start another Python process.
             if (metric == null) {
-                continue;
+                if (!this.pythonBootstrapper.isAlive()) {
+                    break;
+                } else {
+                    continue;
+                }
             }
 
             applicationInsightsSender.sentMetric(metric);
         }
-    }
-
-    private static ContainerStatsMetric getMetric(MetricProvider metricProvider) {
-        ContainerStatsMetric nextMetric = null;
-
-        try {
-            nextMetric = metricProvider.getNext();
-        } catch (IOException e) {
-            System.out.println("Failed to fetch metric with error: " + e.getMessage());
-        }
-
-        return nextMetric;
     }
 
     // endregion Private

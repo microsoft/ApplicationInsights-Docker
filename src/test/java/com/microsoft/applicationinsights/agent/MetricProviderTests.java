@@ -1,5 +1,6 @@
 package com.microsoft.applicationinsights.agent;
 
+import com.microsoft.applicationinsights.common.Constants;
 import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,11 +14,9 @@ import java.io.StringReader;
  */
 public class MetricProviderTests {
 
-    private String defaultMetric = "{'metric':{'name':'name','value':0,'count':0,'min':0,'max':0,'std':0},'properties':{'docker-image':'x','docker-host':'x','docker-container-id':'x','docker-container-name':'x'}}";
-
     @Test
     public void testValidJsonResultsWithContainerStatsMetric() throws IOException {
-        ContainerStatsMetric metric = createProviderAndGetMetric(defaultMetric);
+        ContainerStatsMetric metric = createProviderAndGetMetric(Constants.DEFAULT_METRIC);
 
         Assert.assertNotNull(metric);
     }
