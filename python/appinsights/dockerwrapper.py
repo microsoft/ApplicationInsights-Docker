@@ -11,7 +11,7 @@ class DockerClientWrapper(object):
             raise Exception('docker_client cannot be None')
         self._client = docker_client
 
-    def get_name(self):
+    def get_host_name(self):
         return self._client.info().get('Name', 'N/A')
 
     def get_containers(self):
