@@ -49,7 +49,7 @@ public class ApplicationInsightsSender {
 
         // If the given metric is one of the build-in PC in Ibiza, we send it as a performance counter telemetry.
         // Otherwise the given metric is sent as a custom metric.
-        if (metricName.equalsIgnoreCase(Constants.CPU_PC_COUNTER_NAME) || metricName.equalsIgnoreCase(Constants.TOTAL_MEMORY_PC_COUNTER_NAME)) {
+        if (false && metricName.equalsIgnoreCase(Constants.CPU_PC_COUNTER_NAME) || metricName.equalsIgnoreCase(Constants.TOTAL_MEMORY_PC_COUNTER_NAME)) {
             telemetry = createPerformanceCounterTelemetry(containerStatsMetric);
         } else {
             MetricTelemetry metricTelemetry = new MetricTelemetry(metricName, containerStatsMetric.getValue());
