@@ -73,8 +73,8 @@ class DockerCollector(object):
         cpu_metric = DockerCollector._get_cpu_metric(json_stats=stats)
         memory_metric = DockerCollector._get_simple_metric(
             stats=stats,
-            func=lambda stat: (1/(1024*1024))*(stat['memory_stats']['limit'] - stat['memory_stats']['usage']),
-            metric_name='docker-available-memory-mb')
+            func=lambda stat: stat['memory_stats']['limit'] - stat['memory_stats']['usage'],
+            metric_name='Available Bytes')
 
         rx_bytes_metric = DockerCollector._get_per_second_metric(
             stats=stats,
@@ -110,7 +110,7 @@ class DockerCollector(object):
         system1 = system_cpu_list[: len(system_cpu_list) - 1]
         cpu_percents = [100.0 * (cpu_curr - cpu_prev) / (system_curr - system_prev) for
                         cpu_curr, cpu_prev, system_curr, system_prev in list(zip(cpu2, cpu1, system2, system1))]
-        return DockerCollector.Metric(name='docker-cpu-usage',
+        return DockerCollector.Metric(name='% Processor Time',
                                       value=statistics.mean(cpu_percents),
                                       count=len(cpu_percents),
                                       min=min(cpu_percents),
