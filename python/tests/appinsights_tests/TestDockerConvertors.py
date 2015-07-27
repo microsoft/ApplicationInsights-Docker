@@ -25,7 +25,7 @@ class TestDockerConvertors(unittest.TestCase):
         stats = [(system, {'cpu_stats': {'cpu_usage': {'total_usage': cpu}, 'system_cpu_usage': system}}) for
                  cpu, system in samples]
         metric = dockerconvertors.get_cpu_metric(stats)
-        self.assertEqual('docker-cpu-usage', metric['name'])
+        self.assertEqual('% Processor Time', metric['name'])
         self.assertEqual(len(samples) - 1, metric['count'])
         self.assertAlmostEqual(expected_avg, metric['value'], delta=0.01)
         self.assertAlmostEqual(expected_min, metric['min'], delta=0.01)
@@ -106,8 +106,8 @@ class TestDockerConvertors(unittest.TestCase):
                        memory_samples)]
 
         expected_metrics = {
-            'docker-cpu-usage': {'name': 'docker-cpu-usage', 'count': 6, 'value': 36.66666667, 'min': 10, 'max': 100, 'std': 33.26659987},
-            'docker-available-memory-mb': {'name': 'docker-available-memory-mb', 'count': 7, 'value': 5.991799491, 'min': 4.768371582,
+            '% Processor Time': {'name': '% Processor Time', 'count': 6, 'value': 36.66666667, 'min': 10, 'max': 100, 'std': 33.26659987},
+            'Available Bytes': {'name': 'Available Bytes', 'count': 7, 'value': 5.991799491, 'min': 4.768371582,
              'max': 6.675720215, 'std': 0.722146523},
             'docker-rx-bytes':{'name': 'docker-rx-bytes', 'count': 6, 'value': 3.833333333, 'min': 0, 'max': 11, 'std': 5.262192192},
             'docker-tx-bytes': {'name': 'docker-tx-bytes', 'count': 6, 'value': 4.333333333, 'min': 0, 'max': 19, 'std': 7.420691792},
