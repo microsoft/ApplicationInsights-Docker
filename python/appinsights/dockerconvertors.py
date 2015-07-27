@@ -5,7 +5,7 @@ def convert_to_metrics(stats):
     assert stats is not None and len(stats)>1 ,"stats should have atleast 2 samples in it"
     return [get_cpu_metric(stats=stats),
             get_simple_metric(
-                metric_name='docker-available-memory-mb',
+                metric_name='Available Bytes',
                 func=lambda stat: (1/(1024*1024))*(stat['memory_stats']['limit'] - stat['memory_stats']['usage']),
                 stats=stats
             ),
@@ -47,7 +47,7 @@ def get_cpu_metric(stats):
     cpu_percents = [100.0 * (cpu_curr - cpu_prev) / (system_curr - system_prev) for
                     cpu_curr, cpu_prev, system_curr, system_prev in list(zip(cpu2, cpu1, system2, system1))]
 
-    return {'name':'docker-cpu-usage',
+    return {'name':'% Processor Time',
             'value':statistics.mean(cpu_percents),
             'count':len(cpu_percents),
             'min':min(cpu_percents),
