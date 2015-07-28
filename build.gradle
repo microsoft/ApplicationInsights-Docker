@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    compile files('C:/Sources/applicationinsights-core-1.0.1-SNAPSHOT-all.jar')
+    compile files('C:/JavaSdk-BuildDependencies/Docker/applicationinsights-core-1.0.1-SNAPSHOT-all.jar')
     compile group: 'com.google.code.gson', name: 'gson', version: '1.7.2'
 
     testCompile 'junit:junit:4.11'
