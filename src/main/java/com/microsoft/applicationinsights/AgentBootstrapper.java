@@ -1,7 +1,10 @@
 package com.microsoft.applicationinsights;
 
 import com.microsoft.applicationinsights.agent.ApplicationInsightsSender;
-import com.microsoft.applicationinsights.agent.DockerAgent;
+import com.microsoft.applicationinsights.agent.DockerContainerContextAgent;
+import com.microsoft.applicationinsights.agent.DockerMetricAgent;
+import com.microsoft.applicationinsights.python.ContainerContextPythonBoostrapper;
+import com.microsoft.applicationinsights.python.MetricCollectionPythonBoostrapper;
 import com.microsoft.applicationinsights.python.PythonBootstrapper;
 
 import java.io.IOException;
@@ -12,24 +15,34 @@ import java.io.IOException;
  * The agent is executed by the Docker ENTRYPOINT command.
  */
 public class AgentBootstrapper {
-    private static final String PYTHON_BOOTSTRAP_SCRIPT = "python/bootstrap.py";
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
+        System.out.println("Starting Application Insights Docker agent.");
+
         if (args.length == 0) {
             System.out.println("Instrumentation key required.");
 
             return;
         }
 
+        System.out.println("Starting metric collection process.");
         String instrumentationKey = args[0];
-
-        System.out.println("Starting Application Insights Docker agent.");
         ApplicationInsightsSender applicationInsightsSender = new ApplicationInsightsSender(instrumentationKey);
-        PythonBootstrapper pythonBootstrapper = new PythonBootstrapper(PYTHON_BOOTSTRAP_SCRIPT);
+        PythonBootstrapper metricCollectionBootstrapper = new MetricCollectionPythonBoostrapper();
+        DockerMetricAgent dockerMetricAgent = new DockerMetricAgent(metricCollectionBootstrapper, applicationInsightsSender);
+        Thread metricCollectionAgentThread = new Thread(dockerMetricAgent);
+        metricCollectionAgentThread.start();
 
-        DockerAgent dockerAgent = new DockerAgent(pythonBootstrapper, applicationInsightsSender);
-        dockerAgent.run();
+        System.out.println("Starting container context process.");
+        PythonBootstrapper containerContextBootstrapper = new ContainerContextPythonBoostrapper();
+        DockerContainerContextAgent containerContextAgent = new DockerContainerContextAgent(containerContextBootstrapper);
+        Thread containerContextAgentThread = new Thread(containerContextAgent);
+        containerContextAgentThread.start();
 
-        System.out.println("Exiting...");
+        // Waiting for all threads.
+        metricCollectionAgentThread.join();
+        containerContextAgentThread.join();
+
+        System.out.println("Shutting down Application Insights Docker agent.");
     }
 }
