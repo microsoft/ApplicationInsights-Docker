@@ -5,7 +5,6 @@ import argparse
 from appinsights import program
 
 _docker_socket = 'unix:///docker.sock'
-_docker_socket = 'http://galha-ubuntu:4243'
 _docker_info_path = '/usr/appinsights/docker/docker.info'
 
 methods = {'collect': lambda: program.run_collector(docker_socket=_docker_socket),
@@ -13,7 +12,7 @@ methods = {'collect': lambda: program.run_collector(docker_socket=_docker_socket
 
 parser = argparse.ArgumentParser(description="Application Insights container collector/injector")
 parser.add_argument("method", help="The method to run (Collect/Inject)" )
-args = parser.parse_args(['inject'])
+args = parser.parse_args(['collect'])
 method = args.method
 
 assert method in methods
