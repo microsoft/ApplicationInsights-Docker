@@ -22,3 +22,8 @@ class DockerClientWrapper(object):
                             islice(self._client.stats(container=container, decode=True), 0, stats_to_bring, 1)))
         except errors.APIError:
             return []
+
+    def run_command(self, container, cmd):
+        exec_id = self._client.exec_create(container, cmd)
+        output = self._client.exec_start(exec_id=exec_id)
+        return output
