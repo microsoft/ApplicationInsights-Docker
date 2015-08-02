@@ -7,7 +7,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  */
 public class ContainerContextPythonBoostrapper extends PythonBootstrapper<Void> {
 
-    private static final String BOOTSTRAPPER_ARG = "container_context";
+    private static final String BOOTSTRAPPER_ARG = "inject";
 
     public ContainerContextPythonBoostrapper() {
         super(BOOTSTRAPPER_ARG);

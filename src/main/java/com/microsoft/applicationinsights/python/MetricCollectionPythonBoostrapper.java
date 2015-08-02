@@ -11,7 +11,7 @@ import java.io.InputStreamReader;
  */
 public class MetricCollectionPythonBoostrapper extends PythonBootstrapper<MetricProvider> {
 
-    private static final String BOOTSTRAPPER_ARG = "metric_collection";
+    private static final String BOOTSTRAPPER_ARG = "collect";
 
     protected MetricCollectionPythonBoostrapper(ProcessBuilder processBuilder) {
         super(processBuilder);
