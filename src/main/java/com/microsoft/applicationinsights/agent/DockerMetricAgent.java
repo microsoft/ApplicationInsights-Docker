@@ -8,14 +8,14 @@ import java.io.IOException;
 /**
  * Created by yonisha on 7/23/2015.
  */
-public class DockerAgent {
+public class DockerMetricAgent implements Runnable {
     private ApplicationInsightsSender applicationInsightsSender;
     private PythonBootstrapper pythonBootstrapper;
     private boolean shouldStop = false;
 
     // region Ctor
 
-    public DockerAgent(PythonBootstrapper pythonBootstrapper, ApplicationInsightsSender applicationInsightsSender) {
+    public DockerMetricAgent(PythonBootstrapper pythonBootstrapper, ApplicationInsightsSender applicationInsightsSender) {
         this.applicationInsightsSender = applicationInsightsSender;
         this.pythonBootstrapper = pythonBootstrapper;
     }
@@ -27,14 +27,20 @@ public class DockerAgent {
     /**
      * This method starts a Python process to collect Docker metrics.
      * If, for any reason, the Python process exits, we start another process and continue to collect metrics.
-     * @throws IOException
      */
-    public void run() throws IOException {
+    public void run() {
 
         // TODO: check python exit code and check if killed intentionally.
-        while (true && !shouldStop) {
-            MetricProvider metricProvider = this.pythonBootstrapper.start();
-            collectAndSendMetrics(metricProvider, this.applicationInsightsSender);
+        while (!shouldStop) {
+
+            try {
+                this.pythonBootstrapper.start(false);
+            } catch (IOException e) {}
+
+            MetricProvider metricProvider = (MetricProvider)this.pythonBootstrapper.getResult();
+            if (metricProvider != null) {
+                collectAndSendMetrics(metricProvider, this.applicationInsightsSender);
+            }
         }
     }
 

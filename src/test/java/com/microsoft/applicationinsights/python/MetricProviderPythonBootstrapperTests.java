@@ -12,19 +12,19 @@ import static org.mockito.Mockito.*;
 /**
  * Created by yonisha on 7/26/2015.
  */
-public class PythonBootstrapperTests {
+public class MetricProviderPythonBootstrapperTests {
 
     private com.microsoft.applicationinsights.python.ProcessBuilder processBuilderMock = mock(ProcessBuilder.class);
     private Process processMock = mock(Process.class);
-    private PythonBootstrapper bootstrapperUnderTest = new PythonBootstrapper(processBuilderMock);
+    private PythonBootstrapper bootstrapperUnderTest = new MetricCollectionPythonBoostrapper(processBuilderMock);
     private BufferedInputStream inputStreamMock = mock(BufferedInputStream.class);
 
     @Before
     public void testInit() throws IOException {
         when(processBuilderMock.start()).thenReturn(processMock);
         when(processMock.getInputStream()).thenReturn(inputStreamMock);
-        this.bootstrapperUnderTest = new PythonBootstrapper(processBuilderMock);
-        this.bootstrapperUnderTest.start();
+        this.bootstrapperUnderTest = new MetricCollectionPythonBoostrapper(processBuilderMock);
+        this.bootstrapperUnderTest.start(false);
     }
 
     @Test
@@ -53,7 +53,7 @@ public class PythonBootstrapperTests {
 
     @Test
     public void testPreviousProcessResourcesAreClosed() throws IOException {
-        bootstrapperUnderTest.start();
+        bootstrapperUnderTest.start(false);
 
         verify(inputStreamMock, times(1)).close();
     }

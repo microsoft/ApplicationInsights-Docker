@@ -5,8 +5,6 @@ import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
 import com.microsoft.applicationinsights.python.PythonBootstrapper;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.internal.verification.AtLeast;
-import org.mockito.internal.verification.api.VerificationMode;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -17,10 +15,10 @@ import static org.mockito.Mockito.*;
 /**
  * Created by yonisha on 7/26/2015.
  */
-public class DockerAgentTests {
+public class DockerMetricAgentTests {
     private ApplicationInsightsSender applicationInsightsSender;
     private PythonBootstrapper pythonBootstrapper;
-    private DockerAgent agentUnderTest;
+    private DockerMetricAgent agentUnderTest;
     private MetricProvider metricProviderMock;
 
     @Before
@@ -32,7 +30,7 @@ public class DockerAgentTests {
 
     @Test
     public void testWhenAgentStartPythonBoostrapperStarts() throws IOException {
-        verify(pythonBootstrapper, atLeastOnce()).start();
+        verify(pythonBootstrapper, atLeastOnce()).start(false);
     }
 
     @Test
@@ -47,7 +45,7 @@ public class DockerAgentTests {
 
     @Test
     public void testOnlyOnePythonProcessStarts() throws IOException {
-        verify(this.pythonBootstrapper, times(1)).start();
+        verify(this.pythonBootstrapper, times(1)).start(false);
     }
 
     @Test
@@ -76,7 +74,7 @@ public class DockerAgentTests {
 
         this.agentUnderTest.run();
 
-        verify(this.pythonBootstrapper, times(1)).start();
+        verify(this.pythonBootstrapper, times(1)).start(false);
         verify(this.metricProviderMock, times(4)).getNext();
         verify(this.applicationInsightsSender, times(2)).sentMetric(any(ContainerStatsMetric.class));
     }
@@ -100,7 +98,7 @@ public class DockerAgentTests {
 
         this.agentUnderTest.run();
 
-        verify(this.pythonBootstrapper, times(2)).start();
+        verify(this.pythonBootstrapper, times(2)).start(false);
     }
 
     private void initializeMocks() throws IOException {
@@ -123,9 +121,9 @@ public class DockerAgentTests {
         this.applicationInsightsSender = mock(ApplicationInsightsSender.class);
 
         this.pythonBootstrapper = mock(PythonBootstrapper.class);
-        when(this.pythonBootstrapper.start()).thenReturn(this.metricProviderMock);
+        when(this.pythonBootstrapper.getResult()).thenReturn(this.metricProviderMock);
         when(this.pythonBootstrapper.isAlive()).thenReturn(false);
 
-        this.agentUnderTest = new DockerAgent(pythonBootstrapper, applicationInsightsSender);
+        this.agentUnderTest = new DockerMetricAgent(pythonBootstrapper, applicationInsightsSender);
     }
 }
