@@ -1,18 +1,22 @@
-import sys
-
 __author__ = 'galha'
-import time
 
 from docker import Client
-
 from appinsights.dockercollector import DockerCollector
-from appinsights.dockerwrapper import  DockerClientWrapper
-# args = parser.parse_args(['9c139518-d405-4c1b-a6c0-f3cddbdc25e8', '-d', 'http://10.165.225.7:4243'])
-# args = parser.parse_args()
-# print('ikey: {0}'.format(args.ikey))
-# print(args)
+from appinsights.dockerwrapper import DockerClientWrapper
+from appinsights.dockerinjector import DockerInjector
+import time
 
-def run(docker_socket):
+def run_injector(docker_socket, docker_info_path):
+    docker_client = Client(base_url=docker_socket)
+    injector = DockerInjector(
+        docker_wrapper=DockerClientWrapper(docker_client=docker_client),
+        docker_info_path=docker_info_path)
+
+    while True:
+        injects = injector.inject()
+        time.sleep(30)
+
+def run_collector(docker_socket):
     docker_client = Client(base_url=docker_socket)
     collector = DockerCollector(
         docker_wrapper=DockerClientWrapper(docker_client=docker_client),
