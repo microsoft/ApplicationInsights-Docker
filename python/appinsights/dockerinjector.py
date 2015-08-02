@@ -1,13 +1,13 @@
 __author__ = 'galha'
 
-from appinsights import dockerconvertors
 import concurrent.futures
+import os
+
+from appinsights import dockerconvertors
 
 
 class DockerInjector(object):
-    _dir_name = "/usr/appinsights/docker"
     _default_bash = "bash"
-    _file_name = "docker.info"
     _mkdir_template = "mkdir -p \"{directory}\""
     _create_file_template = "/bin/sh -c \"[ ! -f {directory}/{file} ] && `echo {properties} > {directory}/{file}` && echo created file || echo file already exists\""
 
@@ -16,6 +16,8 @@ class DockerInjector(object):
         self._docker_info_path = docker_info_path
         self._containers_injected = set()
         self._host_name = None
+        self._dirName = os.path.dirname(docker_info_path)
+        self._fileName = os.path.basename(docker_info_path)
 
     def inject(self):
         containers = self._docker_wrapper.get_containers()
@@ -33,13 +35,14 @@ class DockerInjector(object):
         return results
 
     def _inject_container(self, container):
-        mkdir_cmd = DockerInjector._mkdir_template.format(directory=DockerInjector._dir_name)
+        mkdir_cmd = DockerInjector._mkdir_template.format(directory=self._dirName)
         self._docker_wrapper.run_command(container=container, cmd=mkdir_cmd)
         properties = dockerconvertors.get_container_properties(container=container, host_name=self._host_name)
+        properties_string = ",".join(["{key}={value}".format(key=k, value=v) for k, v in properties.items()])
         docker_info_cmd = DockerInjector._create_file_template.format(
-            directory=DockerInjector._dir_name,
-            file=DockerInjector._file_name,
-            properties=properties)
+            directory=self._dirName,
+            file=self._fileName,
+            properties=properties_string)
 
         result = self._docker_wrapper.run_command(container=container, cmd=docker_info_cmd)
         self._containers_injected.add(container['Id'])
