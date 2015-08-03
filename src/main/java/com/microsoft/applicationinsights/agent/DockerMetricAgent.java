@@ -31,7 +31,8 @@ public class DockerMetricAgent implements Runnable {
     public void run() {
 
         // TODO: check python exit code and check if killed intentionally.
-        while (!shouldStop) {
+        int processExitValue = -1;
+        while (!shouldStop && processExitValue != 0) {
 
             try {
                 this.pythonBootstrapper.start(false);
@@ -41,6 +42,8 @@ public class DockerMetricAgent implements Runnable {
             if (metricProvider != null) {
                 collectAndSendMetrics(metricProvider, this.applicationInsightsSender);
             }
+
+            processExitValue = this.pythonBootstrapper.getExitValue();
         }
     }
 

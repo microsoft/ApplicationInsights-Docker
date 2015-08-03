@@ -1,5 +1,6 @@
 package com.microsoft.applicationinsights.python;
 
+import com.microsoft.applicationinsights.common.ArrayUtils;
 import java.io.IOException;
 
 /**
@@ -21,8 +22,10 @@ public abstract class PythonBootstrapper<T> {
         this.processBuilder = processBuilder;
     }
 
-    public PythonBootstrapper(String bootstrapperArg) {
-        this.processBuilder = new PythonProcessBuilder(PYTHON_BOOTSTRAP_SCRIPT, bootstrapperArg);
+    public PythonBootstrapper(String... bootstrapperArgs) {
+        String[] updatedParams = ArrayUtils.addFirst(PYTHON_BOOTSTRAP_SCRIPT, bootstrapperArgs);
+
+        this.processBuilder = new PythonProcessBuilder(updatedParams);
     }
 
     // endregion Ctor
@@ -51,16 +54,18 @@ public abstract class PythonBootstrapper<T> {
             return false;
         }
 
-        try {
-            process.exitValue();
-
-            return false;
-        } catch (java.lang.IllegalThreadStateException e) {
-            return true;
-        }
+        return this.getExitValue() == -1;
     }
 
     public abstract <T> T getResult();
+
+    public int getExitValue() {
+        try {
+            return this.process.exitValue();
+        } catch (java.lang.IllegalThreadStateException e) {
+            return -1;
+        }
+    }
 
     // endregion Public
 

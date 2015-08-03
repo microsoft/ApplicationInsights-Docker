@@ -17,8 +17,13 @@ public class MetricCollectionPythonBoostrapper extends PythonBootstrapper<Metric
         super(processBuilder);
     }
 
+    public MetricCollectionPythonBoostrapper(String... bootstrapperParams) {
+        super(bootstrapperParams);
+
+    }
+
     public MetricCollectionPythonBoostrapper() {
-        super(BOOTSTRAPPER_ARG);
+        this(BOOTSTRAPPER_ARG);
     }
 
     @Override

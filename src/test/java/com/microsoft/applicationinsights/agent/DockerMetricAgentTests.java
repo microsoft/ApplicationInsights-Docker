@@ -124,6 +124,9 @@ public class DockerMetricAgentTests {
         when(this.pythonBootstrapper.getResult()).thenReturn(this.metricProviderMock);
         when(this.pythonBootstrapper.isAlive()).thenReturn(false);
 
+        // 4 has no specific meaning here, just requires exit value != 0.
+        when(this.pythonBootstrapper.getExitValue()).thenReturn(4);
+
         this.agentUnderTest = new DockerMetricAgent(pythonBootstrapper, applicationInsightsSender);
     }
 }
