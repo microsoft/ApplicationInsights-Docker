@@ -26,4 +26,4 @@ class DockerClientWrapper(object):
     def run_command(self, container, cmd):
         exec_id = self._client.exec_create(container, cmd)
         output = self._client.exec_start(exec_id=exec_id)
-        return output
+        return output.decode('utf-8')

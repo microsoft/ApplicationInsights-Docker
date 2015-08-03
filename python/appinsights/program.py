@@ -16,12 +16,13 @@ def run_injector(docker_socket, docker_info_path):
         injects = injector.inject()
         time.sleep(30)
 
-def run_collector(docker_socket):
+def run_collector(docker_socket, sdk_file):
     docker_client = Client(base_url=docker_socket)
     collector = DockerCollector(
         docker_wrapper=DockerClientWrapper(docker_client=docker_client),
         send_event=print,
-        samples_in_each_metric=5)
+        samples_in_each_metric=5,
+        sdk_file=sdk_file)
 
     while True:
         collector.collect_and_send()
