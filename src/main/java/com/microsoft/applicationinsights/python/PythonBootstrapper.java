@@ -1,20 +1,17 @@
 package com.microsoft.applicationinsights.python;
 
-import com.microsoft.applicationinsights.agent.MetricProvider;
-
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 /**
  * Created by yonisha on 7/22/2015.
  */
-public class PythonBootstrapper {
+public abstract class PythonBootstrapper<T> {
 
     // region Members
 
-    ProcessBuilder processBuilder;
-    private Process process;
+    private static final String PYTHON_BOOTSTRAP_SCRIPT = "python/bootstrap.py";
+    protected ProcessBuilder processBuilder;
+    protected Process process;
 
     // endregion Members
 
@@ -24,30 +21,29 @@ public class PythonBootstrapper {
         this.processBuilder = processBuilder;
     }
 
-    public PythonBootstrapper(String pythonScriptName) {
-        this.processBuilder = new PythonProcessBuilder(pythonScriptName);
+    public PythonBootstrapper(String bootstrapperArg) {
+        this.processBuilder = new PythonProcessBuilder(PYTHON_BOOTSTRAP_SCRIPT, bootstrapperArg);
     }
 
     // endregion Ctor
 
     // region Public
 
-    public MetricProvider start() throws IOException {
-        System.out.println("Starting Python bootsrapper.");
-
+    public void start(boolean waitForExit) throws IOException {
         closePreviousProcessResources();
 
         try {
             this.process = processBuilder.start();
+            if (waitForExit) {
+                this.process.waitFor();
+            }
         } catch (IOException e) {
             System.out.println(this.getClass().getSimpleName() + " failed to start python process with error: " + e.getMessage());
 
             throw e;
+        } catch (InterruptedException e) {
+            System.out.println(this.getClass().getSimpleName() + " has been interrupted. Error: " + e.getMessage());
         }
-
-        System.out.println("Python process is running.");
-
-        return new MetricProvider(new BufferedReader(new InputStreamReader(process.getInputStream())));
     }
 
     public boolean isAlive() {
@@ -63,6 +59,8 @@ public class PythonBootstrapper {
             return true;
         }
     }
+
+    public abstract <T> T getResult();
 
     // endregion Public
 

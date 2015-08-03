@@ -10,8 +10,8 @@ public class PythonProcessBuilder  implements ProcessBuilder {
     private final java.lang.ProcessBuilder processBuilder;
     private final String PYTHON_EXE_NAME = "python";
 
-    public PythonProcessBuilder(String pythonScriptName) {
-        this.processBuilder = new java.lang.ProcessBuilder(PYTHON_EXE_NAME, pythonScriptName);
+    public PythonProcessBuilder(String pythonScriptName, String bootstrapperArg) {
+        this.processBuilder = new java.lang.ProcessBuilder(PYTHON_EXE_NAME, pythonScriptName, bootstrapperArg);
     }
 
     public Process start() throws IOException {
