@@ -32,14 +32,13 @@ public class AgentBootstrapperTests {
 
         String testScriptPath = resource.getPath().replaceFirst("/", "");
 
-        metricCollectionPythonBoostrapper = new MetricCollectionPythonBoostrapper("custom", testScriptPath);
+        metricCollectionPythonBoostrapper = new MetricCollectionPythonBoostrapper("custom", "--script", testScriptPath);
     }
 
     @Test
     public void testAgentBootrapperStartsMetricCollectionSuccessfully() throws InterruptedException {
         Thread thread = agentBootstrapperUnderTest.executeMetricCollectionProcess(aiSenderMock, metricCollectionPythonBoostrapper);
 
-        // TODO: what if timeout? exception?
         thread.join(2000);
 
         verify(aiSenderMock, times(1)).sentMetric(any(ContainerStatsMetric.class));

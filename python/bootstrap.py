@@ -9,8 +9,8 @@ _docker_socket = 'unix:///docker.sock'
 _docker_info_path = '/usr/appinsights/docker/docker.info'
 
 parser = argparse.ArgumentParser(description="Application Insights container collector/injector")
-parser.add_argument("method", help="The method to run 'collect' or 'inject'")
-parser.add_argument("script", help="The script to run when choosing custom method")
+parser.add_argument("method", help="The method to run.", choices=['collect', 'inject', 'custom'])
+parser.add_argument("--script", help="The script to run when choosing 'custom' method")
 
 args = parser.parse_args()
 method = args.method
