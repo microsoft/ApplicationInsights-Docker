@@ -3,11 +3,15 @@ package com.microsoft.applicationinsights;
 import com.microsoft.applicationinsights.agent.ApplicationInsightsSender;
 import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
 import com.microsoft.applicationinsights.python.MetricCollectionPythonBoostrapper;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.net.URL;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -24,23 +28,25 @@ public class AgentBootstrapperTests {
     private ApplicationInsightsSender aiSenderMock = mock(ApplicationInsightsSender.class);
 
     @BeforeClass
-    public static void initClass() {
+    public static void initClass() throws URISyntaxException, IOException {
         ClassLoader classLoader = AgentBootstrapperTests.class.getClassLoader();
-        URL resource = classLoader.getResource(PYTHON_TEST_SCRIPT_FILENAME);
+        InputStream resourceAsStream = classLoader.getResourceAsStream(PYTHON_TEST_SCRIPT_FILENAME);
 
-        Assert.assertNotNull(resource);
+        // ProcessBuilder cannot handle path containing spaces. Therefore, we copy the test python script into
+        // a temp location and loading it from there.
+        String tempDir = System.getProperty("java.io.tmpdir");
+        File tempPython = new File(tempDir, PYTHON_TEST_SCRIPT_FILENAME);
+        Files.copy(resourceAsStream, tempPython.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        System.out.println("Test python script copied to : " + tempPython);
 
-        String testScriptPath = resource.getPath().replaceFirst("/", "");
-        System.out.println("Found python test script at: " + testScriptPath);
-
-        metricCollectionPythonBoostrapper = new MetricCollectionPythonBoostrapper("custom", "--script", testScriptPath);
+        metricCollectionPythonBoostrapper = new MetricCollectionPythonBoostrapper("custom", "--script", tempPython.getAbsolutePath());
     }
 
     @Test
     public void testAgentBootrapperStartsMetricCollectionSuccessfully() throws InterruptedException {
         Thread thread = agentBootstrapperUnderTest.executeMetricCollectionProcess(aiSenderMock, metricCollectionPythonBoostrapper);
 
-        thread.join(5000);
+        thread.join(3000);
 
         verify(aiSenderMock, times(1)).sentMetric(any(ContainerStatsMetric.class));
     }
