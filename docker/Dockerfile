@@ -5,8 +5,8 @@ RUN apt-get -y install default-jre
 RUN pip install docker-py
 RUN pip install statistics
 
-COPY . /usr/docker
-WORKDIR /usr/docker
+COPY . /usr/appinsights/docker
+WORKDIR /usr/appinsights/docker
 
 # TODO: library version as parameter.
-ENTRYPOINT ["java","-cp", "/usr/docker/ApplicationInsights-Docker-0.9.jar", "com.microsoft.applicationinsights.AgentBootstrapper"]
+ENTRYPOINT ["java","-cp", "/usr/appinsights/docker/ApplicationInsights-Docker-0.9.jar", "com.microsoft.applicationinsights.AgentBootstrapper"]

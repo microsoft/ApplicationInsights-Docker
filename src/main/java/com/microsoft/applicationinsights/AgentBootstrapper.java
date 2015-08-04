@@ -25,24 +25,41 @@ public class AgentBootstrapper {
             return;
         }
 
-        System.out.println("Starting metric collection process.");
         String instrumentationKey = args[0];
+        AgentBootstrapper agentBootstrapper = new AgentBootstrapper();
+        agentBootstrapper.run(instrumentationKey);
+
+        System.out.println("Shutting down Application Insights Docker agent.");
+    }
+
+    public void run(String instrumentationKey) throws InterruptedException {
         ApplicationInsightsSender applicationInsightsSender = new ApplicationInsightsSender(instrumentationKey);
         PythonBootstrapper metricCollectionBootstrapper = new MetricCollectionPythonBoostrapper();
-        DockerMetricAgent dockerMetricAgent = new DockerMetricAgent(metricCollectionBootstrapper, applicationInsightsSender);
+
+        Thread metricCollectionAgentThread = executeMetricCollectionProcess(applicationInsightsSender, metricCollectionBootstrapper);
+        Thread containerContextAgentThread = executeContainerContextProcess();
+
+        // Waiting for all threads.
+        metricCollectionAgentThread.join();
+        containerContextAgentThread.join();
+    }
+
+    protected Thread executeMetricCollectionProcess(ApplicationInsightsSender aiSender, PythonBootstrapper metricCollectionBootstrapper) {
+        System.out.println("Starting metric collection process.");
+        DockerMetricAgent dockerMetricAgent = new DockerMetricAgent(metricCollectionBootstrapper, aiSender);
         Thread metricCollectionAgentThread = new Thread(dockerMetricAgent);
         metricCollectionAgentThread.start();
 
+        return metricCollectionAgentThread;
+    }
+
+    protected Thread executeContainerContextProcess() {
         System.out.println("Starting container context process.");
         PythonBootstrapper containerContextBootstrapper = new ContainerContextPythonBoostrapper();
         DockerContainerContextAgent containerContextAgent = new DockerContainerContextAgent(containerContextBootstrapper);
         Thread containerContextAgentThread = new Thread(containerContextAgent);
         containerContextAgentThread.start();
 
-        // Waiting for all threads.
-        metricCollectionAgentThread.join();
-        containerContextAgentThread.join();
-
-        System.out.println("Shutting down Application Insights Docker agent.");
+        return containerContextAgentThread;
     }
 }

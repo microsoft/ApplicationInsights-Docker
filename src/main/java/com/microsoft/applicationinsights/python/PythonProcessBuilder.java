@@ -1,5 +1,7 @@
 package com.microsoft.applicationinsights.python;
 
+import com.microsoft.applicationinsights.common.ArrayUtils;
+
 import java.io.IOException;
 
 /**
@@ -10,8 +12,10 @@ public class PythonProcessBuilder  implements ProcessBuilder {
     private final java.lang.ProcessBuilder processBuilder;
     private final String PYTHON_EXE_NAME = "python";
 
-    public PythonProcessBuilder(String pythonScriptName, String bootstrapperArg) {
-        this.processBuilder = new java.lang.ProcessBuilder(PYTHON_EXE_NAME, pythonScriptName, bootstrapperArg);
+    public PythonProcessBuilder(String... builderParams) {
+        String[] updatedParams = ArrayUtils.addFirst(PYTHON_EXE_NAME, builderParams);
+
+        this.processBuilder = new java.lang.ProcessBuilder(updatedParams);
     }
 
     public Process start() throws IOException {
