@@ -31,6 +31,7 @@ public class AgentBootstrapperTests {
         Assert.assertNotNull(resource);
 
         String testScriptPath = resource.getPath().replaceFirst("/", "");
+        System.out.println("Found python test script at: " + testScriptPath);
 
         metricCollectionPythonBoostrapper = new MetricCollectionPythonBoostrapper("custom", "--script", testScriptPath);
     }
@@ -39,7 +40,7 @@ public class AgentBootstrapperTests {
     public void testAgentBootrapperStartsMetricCollectionSuccessfully() throws InterruptedException {
         Thread thread = agentBootstrapperUnderTest.executeMetricCollectionProcess(aiSenderMock, metricCollectionPythonBoostrapper);
 
-        thread.join(2000);
+        thread.join(5000);
 
         verify(aiSenderMock, times(1)).sentMetric(any(ContainerStatsMetric.class));
     }
