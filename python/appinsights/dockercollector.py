@@ -3,12 +3,18 @@ __author__ = 'galha'
 import concurrent.futures
 import time
 from appinsights import dockerconvertors
-
+import dateutil.parser
+import sys
 
 class DockerCollector(object):
     _cmd_template = "/bin/sh -c \"[ -f {file} ] && echo yes || echo no\""
 
-    def __init__(self, docker_wrapper, samples_in_each_metric=2, send_event=print,
+    @staticmethod
+    def _default_print(text):
+        print(text),
+        sys.stdout.flush()
+
+    def __init__(self, docker_wrapper, samples_in_each_metric=2, send_event=_default_print,
                  sdk_file='/usr/appinsights/docker/sdk.info'):
         super().__init__()
         assert docker_wrapper is not None, 'docker_client cannot be None'
@@ -20,7 +26,7 @@ class DockerCollector(object):
         self._send_event = send_event
         self._containers_state = {}
 
-    def collect_and_send(self):
+    def collect_stats_and_send(self):
         """
         Collects docker metrics from docker and sends them to sender
         cpu, memory, rx_bytes ,tx_bytes, blkio metrics
@@ -75,3 +81,31 @@ class DockerCollector(object):
             return sdk
 
         return False
+
+    def collect_container_events(self):
+        event_name = 'docker-container-state'
+        host_name = self._docker_wrapper.get_host_name()
+        for event in self._docker_wrapper.get_events():
+            status = event['status']
+            if status not in ['start', 'stop', 'die', 'restart', 'pause', 'unpause']:
+                continue
+            inspect = self._docker_wrapper.get_inspection(event)
+            properties = dockerconvertors.get_container_properties_from_inspect(inspect, host_name)
+            properties['status'] = status
+            properties['Created'] = inspect['Created']
+            properties['StartedAt'] = inspect['State']['StartedAt']
+            properties['RestartCount'] = inspect['RestartCount']
+
+            if status in ['stop', 'die']:
+                properties['FinishedAt'] = inspect['State']['FinishedAt']
+                properties['ExitCode'] = inspect['State']['ExitCode']
+                properties['Error'] = inspect['State']['Error']
+                duration = dateutil.parser.parse(properties['FinishedAt']) - dateutil.parser.parse(
+                    properties['StartedAt'])
+                duration_seconds = duration.total_seconds()
+                properties['duration-seconds'] = duration_seconds
+                properties['duration-minutes'] = duration_seconds / 60
+                properties['duration-hours'] = duration_seconds / 3600
+                properties['duration-days'] = duration_seconds / 86400
+            event_data = {'name': event_name, 'properties': properties}
+            self._send_event(event_data)

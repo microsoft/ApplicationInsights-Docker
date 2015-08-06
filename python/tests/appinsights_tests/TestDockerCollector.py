@@ -23,7 +23,7 @@ class TestDockerCollector(unittest.TestCase):
                 mock.get_containers.return_value = containers
                 mock.get_stats.return_value = stats
                 collector = DockerCollector(mock, 3, lambda x: events.append(x))
-                collector.collect_and_send()
+                collector.collect_stats_and_send()
                 expected_metrics = [{'metric':metric, 'properties': properties} for container in containers for metric in metrics]
                 expectedEventsCount = len(containers)*len(metrics)
                 self.assertEqual(expectedEventsCount, len(events))
@@ -47,7 +47,7 @@ class TestDockerCollector(unittest.TestCase):
                 mock.get_stats.return_value = stats
                 mock.run_command.return_value = 'no'
                 collector = DockerCollector(mock, 3, lambda x: events.append(x))
-                collector.collect_and_send()
+                collector.collect_stats_and_send()
                 self.assertEqual(0, len(events))
 
     def test_collect_and_send_dont_send_events_when_no_metrics(self):
@@ -67,7 +67,7 @@ class TestDockerCollector(unittest.TestCase):
                 mock.get_stats.return_value = stats
                 mock.run_command.return_value = 'no'
                 collector = DockerCollector(mock, 3, lambda x: events.append(x))
-                collector.collect_and_send()
+                collector.collect_stats_and_send()
                 self.assertEqual(0, len(events))
 
     def test_collect_and_send_dont_send_events_when_sdk_is_running(self):
@@ -87,6 +87,6 @@ class TestDockerCollector(unittest.TestCase):
                 mock.get_stats.return_value = stats
                 mock.run_command.return_value = 'yes'
                 collector = DockerCollector(mock, 3, lambda x: events.append(x))
-                collector.collect_and_send()
+                collector.collect_stats_and_send()
                 self.assertEqual(0, len(events))
 

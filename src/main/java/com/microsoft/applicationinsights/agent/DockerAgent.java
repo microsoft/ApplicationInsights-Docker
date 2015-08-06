@@ -57,7 +57,7 @@ public class DockerAgent<T> implements Runnable {
     }
 
     private void collectAndSendEvents(EventProvider<T> eventProvider, ApplicationInsightsSender applicationInsightsSender) {
-        System.out.println("Starting to collect events.");
+        System.out.println("Starting to collect events from: " + this.pythonBootstrapper.getClass().getSimpleName());
 
         while (true) {
             T event = eventProvider.getNext();
