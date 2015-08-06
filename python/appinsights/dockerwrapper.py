@@ -27,3 +27,11 @@ class DockerClientWrapper(object):
         exec_id = self._client.exec_create(container, cmd)
         output = self._client.exec_start(exec_id=exec_id)
         return output.decode('utf-8')
+
+    def get_events(self):
+        for event in self._client.events(decode=True):
+            event['Id']=event['id']
+            yield event
+
+    def get_inspection(self, container):
+        return self._client.inspect_container(container=container)

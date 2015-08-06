@@ -3,6 +3,8 @@ __author__ = 'galha'
 import concurrent.futures
 import time
 from appinsights import dockerconvertors
+import datetime
+import dateutil.parser
 
 
 class DockerCollector(object):
@@ -20,7 +22,7 @@ class DockerCollector(object):
         self._send_event = send_event
         self._containers_state = {}
 
-    def collect_and_send(self):
+    def collect_stats_and_send(self):
         """
         Collects docker metrics from docker and sends them to sender
         cpu, memory, rx_bytes ,tx_bytes, blkio metrics
@@ -75,3 +77,31 @@ class DockerCollector(object):
             return sdk
 
         return False
+
+    def collect_container_events(self):
+        event_name = 'docker-container-state'
+        host_name = self._docker_wrapper.get_host_name()
+        for event in self._docker_wrapper.get_events():
+            status = event['status']
+            if status not in ['start', 'stop', 'die', 'restart', 'pause', 'unpause']:
+                continue
+            inspect = self._docker_wrapper.get_inspection(event)
+            properties = dockerconvertors.get_container_properties_from_inspect(inspect, host_name)
+            properties['status'] = status
+            properties['Created'] = inspect['Created']
+            properties['StartedAt'] = inspect['State']['StartedAt']
+            properties['RestartCount'] = inspect['RestartCount']
+
+            if status in ['stop', 'die']:
+                properties['FinishedAt'] = inspect['State']['FinishedAt']
+                properties['ExitCode'] = inspect['State']['ExitCode']
+                properties['Error'] = inspect['State']['Error']
+                duration = dateutil.parser.parse(properties['FinishedAt']) - dateutil.parser.parse(
+                    properties['StartedAt'])
+                duration_seconds = duration.total_seconds()
+                properties['duration-seconds'] = duration_seconds
+                properties['duration-minutes'] = duration_seconds / 60
+                properties['duration-hours'] = duration_seconds / 3600
+                properties['duration-days'] = duration_seconds / 86400
+            send_event = {'name': event_name, 'properties': properties}
+            print(send_event)
