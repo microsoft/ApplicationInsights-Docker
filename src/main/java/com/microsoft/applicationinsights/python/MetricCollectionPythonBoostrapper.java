@@ -1,9 +1,8 @@
 package com.microsoft.applicationinsights.python;
 
-import com.microsoft.applicationinsights.agent.MetricProvider;
+import com.microsoft.applicationinsights.providers.MetricProvider;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 
 /**
@@ -19,7 +18,6 @@ public class MetricCollectionPythonBoostrapper extends PythonBootstrapper<Metric
 
     public MetricCollectionPythonBoostrapper(String... bootstrapperParams) {
         super(bootstrapperParams);
-
     }
 
     public MetricCollectionPythonBoostrapper() {

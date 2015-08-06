@@ -1,9 +1,10 @@
 package com.microsoft.applicationinsights;
 
-import com.microsoft.applicationinsights.agent.ApplicationInsightsSender;
+import com.microsoft.applicationinsights.common.ApplicationInsightsSender;
+import com.microsoft.applicationinsights.agent.DockerAgent;
 import com.microsoft.applicationinsights.agent.DockerContainerContextAgent;
-import com.microsoft.applicationinsights.agent.DockerMetricAgent;
 import com.microsoft.applicationinsights.python.ContainerContextPythonBoostrapper;
+import com.microsoft.applicationinsights.python.ContainerStatePythonBootstrapper;
 import com.microsoft.applicationinsights.python.MetricCollectionPythonBoostrapper;
 import com.microsoft.applicationinsights.python.PythonBootstrapper;
 
@@ -34,19 +35,24 @@ public class AgentBootstrapper {
 
     public void run(String instrumentationKey) throws InterruptedException {
         ApplicationInsightsSender applicationInsightsSender = new ApplicationInsightsSender(instrumentationKey);
-        PythonBootstrapper metricCollectionBootstrapper = new MetricCollectionPythonBoostrapper();
 
+        PythonBootstrapper metricCollectionBootstrapper = new MetricCollectionPythonBoostrapper();
         Thread metricCollectionAgentThread = executeMetricCollectionProcess(applicationInsightsSender, metricCollectionBootstrapper);
+
+        PythonBootstrapper containerStateBootstrapper = new ContainerStatePythonBootstrapper();
+        Thread containerStateThread = executeContainerStateProcess(applicationInsightsSender, containerStateBootstrapper);
+
         Thread containerContextAgentThread = executeContainerContextProcess();
 
         // Waiting for all threads.
         metricCollectionAgentThread.join();
+        containerStateThread.join();
         containerContextAgentThread.join();
     }
 
     protected Thread executeMetricCollectionProcess(ApplicationInsightsSender aiSender, PythonBootstrapper metricCollectionBootstrapper) {
         System.out.println("Starting metric collection process.");
-        DockerMetricAgent dockerMetricAgent = new DockerMetricAgent(metricCollectionBootstrapper, aiSender);
+        DockerAgent dockerMetricAgent = new DockerAgent(metricCollectionBootstrapper, aiSender);
         Thread metricCollectionAgentThread = new Thread(dockerMetricAgent);
         metricCollectionAgentThread.start();
 
@@ -61,5 +67,14 @@ public class AgentBootstrapper {
         containerContextAgentThread.start();
 
         return containerContextAgentThread;
+    }
+
+    protected Thread executeContainerStateProcess(ApplicationInsightsSender aiSender, PythonBootstrapper containerStateBootstrapper) {
+        System.out.println("Starting container state process.");
+        DockerAgent containerStateAgent = new DockerAgent(containerStateBootstrapper, aiSender);
+        Thread containerStateThread = new Thread(containerStateAgent);
+        containerStateThread.start();
+
+        return containerStateThread;
     }
 }
