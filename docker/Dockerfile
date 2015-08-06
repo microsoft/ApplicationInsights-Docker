@@ -4,6 +4,7 @@ RUN apt-get -y update
 RUN apt-get -y install default-jre
 RUN pip install docker-py
 RUN pip install statistics
+RUN pip install python-dateutil
 
 COPY . /usr/appinsights/docker
 WORKDIR /usr/appinsights/docker

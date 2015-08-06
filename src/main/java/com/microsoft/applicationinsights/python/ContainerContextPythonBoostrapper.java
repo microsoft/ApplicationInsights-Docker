@@ -1,7 +1,5 @@
 package com.microsoft.applicationinsights.python;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 /**
  * Created by yonisha on 7/28/2015.
  */

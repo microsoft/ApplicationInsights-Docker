@@ -1,6 +1,7 @@
-package com.microsoft.applicationinsights.agent;
+package com.microsoft.applicationinsights.common;
 
 import com.microsoft.applicationinsights.TelemetryClient;
+import com.microsoft.applicationinsights.common.ApplicationInsightsSender;
 import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
 import com.microsoft.applicationinsights.internal.perfcounter.Constants;
 import com.microsoft.applicationinsights.telemetry.MetricTelemetry;
@@ -51,7 +52,7 @@ public class ApplicationInsightsSenderTests {
     private void testMetricClassifiedCorrectly(boolean generatePerformanceCounterMetricName, Class expectedTelemetryType) {
         ContainerStatsMetric containerStatsMetric = createContainerStatsMetric(generatePerformanceCounterMetricName);
 
-        defaultSender.sentMetric(containerStatsMetric);
+        defaultSender.track(containerStatsMetric);
 
         Mockito.verify(telemetryClientMock, times(1)).track(any(Telemetry.class));
 

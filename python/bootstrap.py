@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(description="Application Insights container col
 parser.add_argument("method", help="The method to run.", choices=['collect', 'inject', 'custom', 'events'])
 parser.add_argument("--script", help="The script to run when choosing 'custom' method")
 
-args = parser.parse_args(['events'])
+args = parser.parse_args()
 method = args.method
 script = args.script
 

@@ -1,13 +1,14 @@
-package com.microsoft.applicationinsights.agent;
+package com.microsoft.applicationinsights.common;
 
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.microsoft.applicationinsights.TelemetryConfiguration;
+import com.microsoft.applicationinsights.contracts.ContainerStateEvent;
 import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
 import com.microsoft.applicationinsights.internal.perfcounter.Constants;
+import com.microsoft.applicationinsights.telemetry.EventTelemetry;
 import com.microsoft.applicationinsights.telemetry.MetricTelemetry;
 import com.microsoft.applicationinsights.telemetry.PerformanceCounterTelemetry;
 import com.microsoft.applicationinsights.telemetry.Telemetry;
-
 import java.util.Map;
 
 /**
@@ -34,8 +35,17 @@ public class ApplicationInsightsSender {
 
     // region Public
 
-    public void sentMetric(ContainerStatsMetric metric) {
-        Telemetry telemetry = createTelemetry(metric);
+    public <T> void track(T metric) {
+        Telemetry telemetry;
+
+        if (metric instanceof ContainerStatsMetric) {
+            telemetry = createEventTelemetry((ContainerStatsMetric) metric);
+        } else if (metric instanceof ContainerStateEvent) {
+            telemetry = createEventTelemetry((ContainerStateEvent) metric);
+        } else {
+            throw new IllegalArgumentException("Unknown metric: " + metric.getClass().getSimpleName());
+        }
+
         this.telemetryClient.track(telemetry);
     }
 
@@ -43,11 +53,18 @@ public class ApplicationInsightsSender {
 
     // region Private
 
-    private Telemetry createTelemetry(ContainerStatsMetric containerStatsMetric) {
+    private Telemetry createEventTelemetry(ContainerStateEvent stateEvent) {
+        EventTelemetry telemetry = new EventTelemetry(stateEvent.getName());
+        telemetry.getProperties().putAll(stateEvent.getProperties());
+
+        return telemetry;
+    }
+
+    private Telemetry createEventTelemetry(ContainerStatsMetric containerStatsMetric) {
         Telemetry telemetry;
         String metricName = containerStatsMetric.getMetricName();
 
-        // If the given metric is one of the build-in PC in Ibiza, we send it as a performance counter telemetry.
+        // If the given metric is one of the build-in PC in Ibiza, we track it as a performance counter telemetry.
         // Otherwise the given metric is sent as a custom metric.
         if (metricName.equalsIgnoreCase(Constants.CPU_PC_COUNTER_NAME) || metricName.equalsIgnoreCase(Constants.TOTAL_MEMORY_PC_COUNTER_NAME)) {
             telemetry = createPerformanceCounterTelemetry(containerStatsMetric);

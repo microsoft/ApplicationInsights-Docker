@@ -1,7 +1,10 @@
 package com.microsoft.applicationinsights.agent;
 
+import com.microsoft.applicationinsights.common.ApplicationInsightsSender;
+import com.microsoft.applicationinsights.agent.DockerAgent;
 import com.microsoft.applicationinsights.common.Constants;
 import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
+import com.microsoft.applicationinsights.providers.MetricProvider;
 import com.microsoft.applicationinsights.python.PythonBootstrapper;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,10 +18,10 @@ import static org.mockito.Mockito.*;
 /**
  * Created by yonisha on 7/26/2015.
  */
-public class DockerMetricAgentTests {
+public class DockerAgentTests {
     private ApplicationInsightsSender applicationInsightsSender;
     private PythonBootstrapper pythonBootstrapper;
-    private DockerMetricAgent agentUnderTest;
+    private DockerAgent agentUnderTest;
     private MetricProvider metricProviderMock;
 
     @Before
@@ -40,7 +43,7 @@ public class DockerMetricAgentTests {
 
     @Test
     public void testMetricIsSent() {
-        verify(this.applicationInsightsSender, atLeastOnce()).sentMetric(any(ContainerStatsMetric.class));
+        verify(this.applicationInsightsSender, atLeastOnce()).track(any(ContainerStatsMetric.class));
     }
 
     @Test
@@ -61,7 +64,7 @@ public class DockerMetricAgentTests {
                     agentUnderTest.stop();
                 }
 
-                return numOfTrackedEvents[0] == 1 || numOfTrackedEvents[0] == 3 ? new ContainerStatsMetric(Constants.DEFAULT_METRIC) : null;
+                return numOfTrackedEvents[0] == 1 || numOfTrackedEvents[0] == 3 ? new ContainerStatsMetric(Constants.DEFAULT_METRIC_EVENT) : null;
             }
         });
 
@@ -76,7 +79,7 @@ public class DockerMetricAgentTests {
 
         verify(this.pythonBootstrapper, times(1)).start(false);
         verify(this.metricProviderMock, times(4)).getNext();
-        verify(this.applicationInsightsSender, times(2)).sentMetric(any(ContainerStatsMetric.class));
+        verify(this.applicationInsightsSender, times(2)).track(any(ContainerStatsMetric.class));
     }
 
     @Test
@@ -114,7 +117,7 @@ public class DockerMetricAgentTests {
                     agentUnderTest.stop();
                 }
 
-                return numOfTrackedEvents[0] <= numberOfEventsToSend ? new ContainerStatsMetric(Constants.DEFAULT_METRIC) : null;
+                return numOfTrackedEvents[0] <= numberOfEventsToSend ? new ContainerStatsMetric(Constants.DEFAULT_METRIC_EVENT) : null;
             }
         });
 
@@ -127,6 +130,6 @@ public class DockerMetricAgentTests {
         // 4 has no specific meaning here, just requires exit value != 0.
         when(this.pythonBootstrapper.getExitValue()).thenReturn(4);
 
-        this.agentUnderTest = new DockerMetricAgent(pythonBootstrapper, applicationInsightsSender);
+        this.agentUnderTest = new DockerAgent(pythonBootstrapper, applicationInsightsSender);
     }
 }

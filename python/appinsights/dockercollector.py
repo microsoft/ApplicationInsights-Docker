@@ -3,14 +3,18 @@ __author__ = 'galha'
 import concurrent.futures
 import time
 from appinsights import dockerconvertors
-import datetime
 import dateutil.parser
-
+import sys
 
 class DockerCollector(object):
     _cmd_template = "/bin/sh -c \"[ -f {file} ] && echo yes || echo no\""
 
-    def __init__(self, docker_wrapper, samples_in_each_metric=2, send_event=print,
+    @staticmethod
+    def _default_print(text):
+        print(text),
+        sys.stdout.flush()
+
+    def __init__(self, docker_wrapper, samples_in_each_metric=2, send_event=_default_print,
                  sdk_file='/usr/appinsights/docker/sdk.info'):
         super().__init__()
         assert docker_wrapper is not None, 'docker_client cannot be None'
@@ -103,5 +107,5 @@ class DockerCollector(object):
                 properties['duration-minutes'] = duration_seconds / 60
                 properties['duration-hours'] = duration_seconds / 3600
                 properties['duration-days'] = duration_seconds / 86400
-            send_event = {'name': event_name, 'properties': properties}
-            print(send_event)
+            event_data = {'name': event_name, 'properties': properties}
+            self._send_event(event_data)

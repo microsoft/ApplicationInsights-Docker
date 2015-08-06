@@ -1,5 +1,5 @@
 __author__ = 'galha'
-import json
+
 from itertools import islice
 from docker import errors
 import time
