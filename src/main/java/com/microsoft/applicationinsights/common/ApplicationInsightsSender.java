@@ -5,6 +5,7 @@ import com.microsoft.applicationinsights.TelemetryConfiguration;
 import com.microsoft.applicationinsights.contracts.ContainerStateEvent;
 import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
 import com.microsoft.applicationinsights.internal.perfcounter.Constants;
+import com.microsoft.applicationinsights.telemetry.EventTelemetry;
 import com.microsoft.applicationinsights.telemetry.MetricTelemetry;
 import com.microsoft.applicationinsights.telemetry.PerformanceCounterTelemetry;
 import com.microsoft.applicationinsights.telemetry.Telemetry;
@@ -38,9 +39,9 @@ public class ApplicationInsightsSender {
         Telemetry telemetry;
 
         if (metric instanceof ContainerStatsMetric) {
-            telemetry = createTelemetry((ContainerStatsMetric)metric);
+            telemetry = createEventTelemetry((ContainerStatsMetric) metric);
         } else if (metric instanceof ContainerStateEvent) {
-            telemetry = createTelemetry((ContainerStateEvent)metric);
+            telemetry = createEventTelemetry((ContainerStateEvent) metric);
         } else {
             throw new IllegalArgumentException("Unknown metric: " + metric.getClass().getSimpleName());
         }
@@ -52,11 +53,14 @@ public class ApplicationInsightsSender {
 
     // region Private
 
-    private Telemetry createTelemetry(ContainerStateEvent stateEvent) {
-        return null;
+    private Telemetry createEventTelemetry(ContainerStateEvent stateEvent) {
+        EventTelemetry telemetry = new EventTelemetry(stateEvent.getName());
+        telemetry.getProperties().putAll(stateEvent.getProperties());
+
+        return telemetry;
     }
 
-    private Telemetry createTelemetry(ContainerStatsMetric containerStatsMetric) {
+    private Telemetry createEventTelemetry(ContainerStatsMetric containerStatsMetric) {
         Telemetry telemetry;
         String metricName = containerStatsMetric.getMetricName();
 

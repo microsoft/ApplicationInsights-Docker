@@ -32,5 +32,6 @@ public abstract class EventProvider<T> {
         return deserialize(json);
     }
 
+    // TODO: Implement a generic method and remove inherited classes.
     protected abstract <T> T deserialize(String json);
 }

@@ -1,6 +1,8 @@
 package com.microsoft.applicationinsights.providers;
 
+import com.google.gson.JsonSyntaxException;
 import com.microsoft.applicationinsights.contracts.ContainerStateEvent;
+import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
 
 import java.io.BufferedReader;
 
@@ -21,7 +23,15 @@ public class StateProvider extends EventProvider<ContainerStateEvent> {
 
     @Override
     protected ContainerStateEvent deserialize(String json) {
-        return null;
+        ContainerStateEvent containerStateEvent = null;
+
+        try {
+            containerStateEvent = new ContainerStateEvent(json);
+        } catch (JsonSyntaxException e) {
+            System.out.println("Failed to deserialize JSON to container state: " + json);
+        }
+
+        return containerStateEvent;
     }
 
     // endregion Private

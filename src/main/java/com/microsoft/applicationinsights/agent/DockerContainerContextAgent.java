@@ -27,7 +27,10 @@ public class DockerContainerContextAgent implements Runnable {
         while (!shouldStop) {
             try {
                 this.pythonBootstrapper.start(true);
-            } catch (IOException e) {}
+            } catch (IOException e) {
+                String simpleName = this.pythonBootstrapper.getClass().getSimpleName();
+                System.out.println(simpleName + " failed with exception: " + e.getMessage());
+            }
         }
     }
 
