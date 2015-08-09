@@ -4,6 +4,9 @@
         xmlns="http://schemas.microsoft.com/ApplicationInsights/2013/Settings"
         schemaVersion="2014-05-30">
     <InstrumentationKey></InstrumentationKey>
+    <TelemetryInitializers>
+        <Add type="com.microsoft.applicationinsights.extensibility.initializer.docker.DockerContextInitializer"/>
+    </TelemetryInitializers>
     <PerformanceCounters>
         <UseBuiltIn>False</UseBuiltIn>
     </PerformanceCounters>
