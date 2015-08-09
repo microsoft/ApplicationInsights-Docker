@@ -15,11 +15,11 @@ def run_injector(docker_socket, docker_info_path):
         docker_info_path=docker_info_path)
 
     while True:
-        injects = injector.inject()
+        injector.inject()
         time.sleep(30)
 
 def run_collect_performance_counters(docker_socket, sdk_file):
-    docker_client = Client(base_url=docker_socket)
+    docker_client = Client(base_url=docker_socket, timeout=5)
     collector = DockerCollector(
         docker_wrapper=DockerClientWrapper(docker_client=docker_client),
         samples_in_each_metric=5,

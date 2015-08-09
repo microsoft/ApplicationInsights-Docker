@@ -1,3 +1,6 @@
+import requests
+from requests.packages.urllib3.exceptions import ReadTimeoutError
+
 __author__ = 'galha'
 
 from itertools import islice
@@ -17,11 +20,13 @@ class DockerClientWrapper(object):
         return self._client.containers()
 
     def get_stats(self, container, stats_to_bring):
+        list = []
         try:
-            return list(map(lambda stat: (time.time(), stat),
-                            islice(self._client.stats(container=container, decode=True), 0, stats_to_bring, 1)))
-        except errors.APIError:
-            return []
+            for stat in islice(self._client.stats(container=container, decode=True), 0, stats_to_bring, 1):
+                list.append((time.time(), stat))
+        except (errors.APIError, requests.exceptions.ReadTimeout) as e:
+            pass
+        return list
 
     def run_command(self, container, cmd):
         exec_id = self._client.exec_create(container, cmd)
