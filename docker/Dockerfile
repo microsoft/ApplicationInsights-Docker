@@ -2,6 +2,8 @@ FROM python:3.4
 
 RUN apt-get -y update
 RUN apt-get -y install default-jre
+
+# TODO: run a script to install all libraries from requirements.txt
 RUN pip install docker-py
 RUN pip install statistics
 RUN pip install python-dateutil
