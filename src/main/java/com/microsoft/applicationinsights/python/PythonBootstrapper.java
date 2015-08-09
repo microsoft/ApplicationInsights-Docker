@@ -63,6 +63,10 @@ public abstract class PythonBootstrapper<T> {
     public abstract <T> T getResult();
 
     public int getExitValue() {
+        if (this.process == null) {
+            return -1;
+        }
+
         try {
             return this.process.exitValue();
         } catch (java.lang.IllegalThreadStateException e) {
