@@ -93,8 +93,12 @@ public abstract class PythonBootstrapper<T> {
     protected void closePreviousProcessResources() {
         if (process != null) {
             try {
-                process.getInputStream().close();
-                process.getErrorStream().close();
+                if (this.process.getInputStream() != null) {
+                    process.getInputStream().close();
+                }
+                if (this.process.getErrorStream() != null) {
+                    process.getErrorStream().close();
+                }
             } catch (IOException e) {
             }
         }
