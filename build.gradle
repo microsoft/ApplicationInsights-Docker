@@ -40,7 +40,7 @@ task copyApplicationLibs(type: Copy) {
     into "$rootDir/build/docker"
 }
 
-task installPythonLibraties() {
+task installPythonLibraties << {
     File theInfoFile = new File("$rootDir/docker/requirements.txt")
     theInfoFile.eachLine { line ->
         exec {
@@ -49,6 +49,17 @@ task installPythonLibraties() {
         }
     }
 }
+
+task runPythonTests << {
+    exec {
+        executable "python"
+        args "-m", "unittest", "discover", "-s", "$rootDir/python"
+    }
+}
+
+tasks.test.dependsOn installPythonLibraties
+tasks.runPythonTests.dependsOn installPythonLibraties
+tasks.test.finalizedBy runPythonTests
 
 // Creating a fat-jar instead of the original one, to be added to the image more easily.
 jar.enabled = false

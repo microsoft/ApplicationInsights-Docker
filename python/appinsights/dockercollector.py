@@ -91,21 +91,23 @@ class DockerCollector(object):
             event_name = event_name_template.format(status)
             inspect = self._docker_wrapper.get_inspection(event)
             properties = dockerconvertors.get_container_properties_from_inspect(inspect, host_name)
-            properties['status'] = status
-            properties['Created'] = inspect['Created']
-            properties['StartedAt'] = inspect['State']['StartedAt']
-            properties['RestartCount'] = inspect['RestartCount']
+            properties['docker-status'] = status
+            properties['docker-Created'] = inspect['Created']
+            properties['docker-StartedAt'] = inspect['State']['StartedAt']
+            properties['docker-RestartCount'] = inspect['RestartCount']
 
             if status in ['stop', 'die']:
-                properties['FinishedAt'] = inspect['State']['FinishedAt']
-                properties['ExitCode'] = inspect['State']['ExitCode']
-                properties['Error'] = inspect['State']['Error']
-                duration = dateutil.parser.parse(properties['FinishedAt']) - dateutil.parser.parse(
-                    properties['StartedAt'])
+                properties['docker-FinishedAt'] = inspect['State']['FinishedAt']
+                properties['docker-ExitCode'] = inspect['State']['ExitCode']
+
+                error = inspect['State']['Error']
+                properties['docker-Error'] = error if (error is not None) else ""
+                duration = dateutil.parser.parse(properties['docker-FinishedAt']) - dateutil.parser.parse(
+                    properties['docker-StartedAt'])
                 duration_seconds = duration.total_seconds()
-                properties['duration-seconds'] = duration_seconds
-                properties['duration-minutes'] = duration_seconds / 60
-                properties['duration-hours'] = duration_seconds / 3600
-                properties['duration-days'] = duration_seconds / 86400
+                properties['docker-duration-seconds'] = duration_seconds
+                properties['docker-duration-minutes'] = duration_seconds / 60
+                properties['docker-duration-hours'] = duration_seconds / 3600
+                properties['docker-duration-days'] = duration_seconds / 86400
             event_data = {'name': event_name, 'properties': properties}
             self._send_event(event_data)
