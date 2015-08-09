@@ -33,6 +33,10 @@ task copyDockerFiles(type: Copy) {
 
 task copyApplicationLibs(type: Copy) {
     from project.buildDir.absolutePath + "/libs"
+
+    // TODO: remove when the Java SDK bug will be fixed (config file parsing failed when provided as resource)
+    from "$rootDir/sdk"
+
     into "$rootDir/build/docker"
 }
 

@@ -32,8 +32,7 @@ public class DockerAgent<T> implements Runnable {
     public void run() {
 
         // TODO: check python exit code and check if killed intentionally.
-        int processExitValue = -1;
-        while (!shouldStop && processExitValue != 0) {
+        while (!shouldStop && this.pythonBootstrapper.getExitValue() != 0) {
 
             try {
                 this.pythonBootstrapper.start(false);
@@ -44,7 +43,8 @@ public class DockerAgent<T> implements Runnable {
                 collectAndSendEvents(eventProvider, this.applicationInsightsSender);
             }
 
-            processExitValue = this.pythonBootstrapper.getExitValue();
+            String processExitInfo = this.pythonBootstrapper.getProcessExitInfo();
+            System.out.println(processExitInfo);
         }
     }
 
