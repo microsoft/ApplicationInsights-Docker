@@ -77,8 +77,7 @@ public abstract class PythonBootstrapper<T> {
     public String getProcessExitInfo() {
         String exitInfo;
         String bootstrapperClassName = this.getClass().getSimpleName();
-        exitInfo = "Python bootstrapper " +  bootstrapperClassName + " has exited with exit code: " + this.getExitValue();
-
+        exitInfo = "Python bootstrapper " +  bootstrapperClassName + " has exited with exit code: " + this.getExitValue() + "\n";
 
         if (this.getExitValue() != 0) {
             exitInfo += "Error message: " + this.getErrorOutput();

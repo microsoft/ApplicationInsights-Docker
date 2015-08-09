@@ -22,7 +22,6 @@ def run_collect_performance_counters(docker_socket, sdk_file):
     docker_client = Client(base_url=docker_socket)
     collector = DockerCollector(
         docker_wrapper=DockerClientWrapper(docker_client=docker_client),
-        send_event=print,
         samples_in_each_metric=5,
         sdk_file=sdk_file)
 
@@ -34,11 +33,10 @@ def run_collect_containers_events(docker_socket):
     docker_client = Client(base_url=docker_socket)
     collector = DockerCollector(
         docker_wrapper=DockerClientWrapper(docker_client=docker_client),
-        send_event=print,
         samples_in_each_metric=5,
         sdk_file=None)
     while True:
         try:
             collector.collect_container_events()
         except Exception as e:
-            sys.stderr.writes('[ERROR]: {0}'.format(e))
+            print(e, file=sys.stderr)

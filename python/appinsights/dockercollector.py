@@ -9,10 +9,8 @@ import sys
 class DockerCollector(object):
     _cmd_template = "/bin/sh -c \"[ -f {file} ] && echo yes || echo no\""
 
-    @staticmethod
     def _default_print(text):
-        print(text),
-        sys.stdout.flush()
+        print(text, flush=True)
 
     def __init__(self, docker_wrapper, samples_in_each_metric=2, send_event=_default_print,
                  sdk_file='/usr/appinsights/docker/sdk.info'):
@@ -83,12 +81,14 @@ class DockerCollector(object):
         return False
 
     def collect_container_events(self):
-        event_name = 'docker-container-state'
+        event_name_template = 'docker-container-{0}'
         host_name = self._docker_wrapper.get_host_name()
         for event in self._docker_wrapper.get_events():
             status = event['status']
             if status not in ['start', 'stop', 'die', 'restart', 'pause', 'unpause']:
                 continue
+
+            event_name = event_name_template.format(status)
             inspect = self._docker_wrapper.get_inspection(event)
             properties = dockerconvertors.get_container_properties_from_inspect(inspect, host_name)
             properties['status'] = status
