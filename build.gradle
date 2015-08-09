@@ -40,6 +40,16 @@ task copyApplicationLibs(type: Copy) {
     into "$rootDir/build/docker"
 }
 
+task installPythonLibraties() {
+    File theInfoFile = new File("$rootDir/docker/requirements.txt")
+    theInfoFile.eachLine { line ->
+        exec {
+            executable "python"
+            args "-m", "pip", "install", line
+        }
+    }
+}
+
 // Creating a fat-jar instead of the original one, to be added to the image more easily.
 jar.enabled = false
 tasks.shadowJar.finalizedBy copyPythonScripts, copyDockerFiles, copyApplicationLibs
