@@ -24,12 +24,15 @@ public class DockerContainerContextAgent implements Runnable {
     public void run() {
 
         // TODO: check python exit code and check if killed intentionally.
-        while (!shouldStop) {
+        while (!shouldStop && this.pythonBootstrapper.getExitValue() != 0) {
             try {
                 this.pythonBootstrapper.start(true);
             } catch (IOException e) {
                 String simpleName = this.pythonBootstrapper.getClass().getSimpleName();
                 System.out.println(simpleName + " failed with exception: " + e.getMessage());
+
+                String processExitInfo = this.pythonBootstrapper.getProcessExitInfo();
+                System.out.println(processExitInfo);
             }
         }
     }

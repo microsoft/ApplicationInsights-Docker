@@ -1,7 +1,10 @@
 package com.microsoft.applicationinsights.python;
 
 import com.microsoft.applicationinsights.common.ArrayUtils;
+import org.apache.commons.io.IOUtils;
+
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Created by yonisha on 7/22/2015.
@@ -67,6 +70,19 @@ public abstract class PythonBootstrapper<T> {
         }
     }
 
+    public String getProcessExitInfo() {
+        String exitInfo;
+        String bootstrapperClassName = this.getClass().getSimpleName();
+        exitInfo = "Python bootstrapper " +  bootstrapperClassName + " has exited with exit code: " + this.getExitValue();
+
+
+        if (this.getExitValue() != 0) {
+            exitInfo += "Error message: " + this.getErrorOutput();
+        }
+
+        return exitInfo;
+    }
+
     // endregion Public
 
     // region Private
@@ -75,9 +91,26 @@ public abstract class PythonBootstrapper<T> {
         if (process != null) {
             try {
                 process.getInputStream().close();
+                process.getErrorStream().close();
             } catch (IOException e) {
             }
         }
+    }
+
+    private String getErrorOutput() {
+        if (this.process == null) {
+            return null;
+        }
+
+        InputStream errorStream = this.process.getErrorStream();
+        String errorMessage = null;
+        try {
+            errorMessage = IOUtils.toString(errorStream, "utf-8");
+        } catch (IOException e) {
+            System.out.println("Failed to get error message for python process: " + this.getClass().getSimpleName());
+        }
+
+        return errorMessage;
     }
 
     // endregion Private
