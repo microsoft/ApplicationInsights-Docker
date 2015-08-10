@@ -1,10 +1,11 @@
 __author__ = 'galha'
 
+from requests.packages.urllib3.exceptions import HTTPError
 import concurrent.futures
 import time
 from appinsights import dockerconvertors
 import dateutil.parser
-import sys
+
 
 class DockerCollector(object):
     _cmd_template = "/bin/sh -c \"[ -f {file} ] && echo yes || echo no\""
@@ -41,16 +42,19 @@ class DockerCollector(object):
                                                                                  stats_to_bring=self._samples_in_each_metric)),
                     containers_without_sdk))
 
-        for container, stats in container_stats:
+        for container, stats in [(container, stats) for container, stats in container_stats if len(stats)>1]:
             metrics = dockerconvertors.convert_to_metrics(stats)
             properties = dockerconvertors.get_container_properties(container, host_name)
             for metric in metrics:
                 self._send_event({'metric': metric, 'properties': properties})
 
     def _container_has_sdk(self, container):
-        result = self._docker_wrapper.run_command(container, DockerCollector._cmd_template.format(file=self._sdk_file))
-        result = result.strip()
-        return result == 'yes'
+        try:
+            result = self._docker_wrapper.run_command(container, DockerCollector._cmd_template.format(file=self._sdk_file))
+            result = result.strip()
+            return result == 'yes'
+        except HTTPError:
+            return False
 
     def update_containers_state(self, containers):
         self._remove_old_containers(containers)

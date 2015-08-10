@@ -2,7 +2,7 @@ __author__ = 'galha'
 import statistics
 
 def convert_to_metrics(stats):
-    assert stats is not None and len(stats)>1 ,"stats should have atleast 2 samples in it"
+    assert stats is not None and len(stats)>1 ,"stats should have at least 2 samples in it"
     return [get_cpu_metric(stats=stats),
             get_simple_metric(
                 metric_name='Available Bytes',

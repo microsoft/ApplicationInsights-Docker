@@ -20,13 +20,13 @@ class DockerClientWrapper(object):
         return self._client.containers()
 
     def get_stats(self, container, stats_to_bring):
-        list = []
+        stats = []
         try:
             for stat in islice(self._client.stats(container=container, decode=True), 0, stats_to_bring, 1):
-                list.append((time.time(), stat))
-        except (errors.APIError, requests.exceptions.ReadTimeout) as e:
+                stats.append((time.time(), stat))
+        except (errors.APIError, ReadTimeoutError, requests.exceptions.ReadTimeout) as e:
             pass
-        return list
+        return stats
 
     def run_command(self, container, cmd):
         exec_id = self._client.exec_create(container, cmd)
