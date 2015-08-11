@@ -1,3 +1,5 @@
+from appinsights.dockerwrapper import DockerWrapperError
+
 __author__ = 'galha'
 
 import concurrent.futures
@@ -35,15 +37,18 @@ class DockerInjector(object):
         return results
 
     def _inject_container(self, container):
-        mkdir_cmd = DockerInjector._mkdir_template.format(directory=self._dirName)
-        self._docker_wrapper.run_command(container=container, cmd=mkdir_cmd)
-        properties = dockerconvertors.get_container_properties(container=container, host_name=self._host_name)
-        properties_string = ",".join(["{key}={value}".format(key=k, value=v) for k, v in properties.items()])
-        docker_info_cmd = DockerInjector._create_file_template.format(
-            directory=self._dirName,
-            file=self._fileName,
-            properties=properties_string)
+        try:
+            mkdir_cmd = DockerInjector._mkdir_template.format(directory=self._dirName)
+            self._docker_wrapper.run_command(container=container, cmd=mkdir_cmd)
+            properties = dockerconvertors.get_container_properties(container=container, host_name=self._host_name)
+            properties_string = ",".join(["{key}={value}".format(key=k, value=v) for k, v in properties.items()])
+            docker_info_cmd = DockerInjector._create_file_template.format(
+                directory=self._dirName,
+                file=self._fileName,
+                properties=properties_string)
 
-        result = self._docker_wrapper.run_command(container=container, cmd=docker_info_cmd)
-        self._containers_injected.add(container['Id'])
-        return result
+            result = self._docker_wrapper.run_command(container=container, cmd=docker_info_cmd)
+            self._containers_injected.add(container['Id'])
+            return result
+        except DockerWrapperError as e:
+            return e

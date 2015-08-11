@@ -1,3 +1,5 @@
+from appinsights.dockerwrapper import DockerWrapperError
+
 __author__ = 'galha'
 
 from requests.packages.urllib3.exceptions import HTTPError
@@ -53,7 +55,7 @@ class DockerCollector(object):
             result = self._docker_wrapper.run_command(container, DockerCollector._cmd_template.format(file=self._sdk_file))
             result = result.strip()
             return result == 'yes'
-        except HTTPError:
+        except DockerWrapperError:
             return False
 
     def update_containers_state(self, containers):
