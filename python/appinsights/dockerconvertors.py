@@ -6,7 +6,7 @@ def convert_to_metrics(stats):
     return [get_cpu_metric(stats=stats),
             get_simple_metric(
                 metric_name='Available Bytes',
-                func=lambda stat: (1/(1024*1024))*(stat['memory_stats']['limit'] - stat['memory_stats']['usage']),
+                func=lambda stat: stat['memory_stats']['limit'] - stat['memory_stats']['usage'],
                 stats=stats
             ),
             get_per_second_metric(

@@ -1,8 +1,7 @@
-import requests
-from requests.packages.urllib3.exceptions import ReadTimeoutError
-
 __author__ = 'galha'
 
+import requests
+from requests.packages.urllib3.exceptions import ReadTimeoutError, HTTPError
 from itertools import islice
 from docker import errors
 from docker import Client
@@ -28,7 +27,7 @@ class DockerClientWrapper(object):
         try:
             for stat in islice(self._client.stats(container=container, decode=True), 0, stats_to_bring, 1):
                 stats.append((time.time(), stat))
-        except (errors.APIError, ReadTimeoutError, requests.exceptions.ReadTimeout):
+        except (errors.APIError, ReadTimeoutError, requests.exceptions.ReadTimeout, HTTPError):
             pass
         return stats
 
@@ -37,7 +36,7 @@ class DockerClientWrapper(object):
             exec_id = self._client.exec_create(container, cmd)
             output = self._client.exec_start(exec_id=exec_id)
             return output.decode('utf-8')
-        except (errors.APIError, ReadTimeoutError, requests.exceptions.ReadTimeout) as e:
+        except (errors.APIError, ReadTimeoutError, requests.exceptions.ReadTimeout, HTTPError) as e:
             raise DockerWrapperError(e)
 
     def get_events(self):

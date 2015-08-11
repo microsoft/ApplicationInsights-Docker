@@ -107,8 +107,8 @@ class TestDockerConvertors(unittest.TestCase):
 
         expected_metrics = {
             '% Processor Time': {'name': '% Processor Time', 'count': 6, 'value': 36.66666667, 'min': 10, 'max': 100, 'std': 33.26659987},
-            'Available Bytes': {'name': 'Available Bytes', 'count': 7, 'value': 5.991799491, 'min': 4.768371582,
-             'max': 6.675720215, 'std': 0.722146523},
+            'Available Bytes': {'name': 'Available Bytes', 'count': 7, 'value': 6282857.142857143, 'min': 5000000,
+             'max': 7000000, 'std': 757225.5121101482},
             'docker-rx-bytes':{'name': 'docker-rx-bytes', 'count': 6, 'value': 3.833333333, 'min': 0, 'max': 11, 'std': 5.262192192},
             'docker-tx-bytes': {'name': 'docker-tx-bytes', 'count': 6, 'value': 4.333333333, 'min': 0, 'max': 19, 'std': 7.420691792},
             'docker-blkio-bytes': {'name': 'docker-blkio-bytes', 'count': 6, 'value': 11.66666667, 'min': 0.1, 'max': 35, 'std': 13.61582413}}
