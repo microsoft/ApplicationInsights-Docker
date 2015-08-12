@@ -70,7 +70,7 @@ class DockerInjector(object):
         try:
             mkdir_cmd = DockerInjector._mkdir_template.format(directory=self._dirName)
             self._docker_wrapper.run_command(container=container, cmd=mkdir_cmd)
-            properties = dockerconvertors.get_container_properties(container=container, host_name=self._host_name)
+            properties = self._get_properties(container)
             properties_string = ",".join(["{key}={value}".format(key=k, value=v) for k, v in properties.items()])
             docker_info_cmd = DockerInjector._create_file_template.format(
                 directory=self._dirName,
@@ -81,3 +81,8 @@ class DockerInjector(object):
             return result
         except DockerWrapperError as e:
             return e
+
+    def _get_properties(self, item):
+        if 'status' in item:
+            return dockerconvertors.get_container_properties_from_inspect(inspect=item, host_name=self._host_name)
+        return dockerconvertors.get_container_properties(container=item, host_name=self._host_name)

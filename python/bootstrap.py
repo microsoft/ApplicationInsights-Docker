@@ -9,11 +9,13 @@ _docker_socket = 'unix:///docker.sock'
 _docker_info_path = '/usr/appinsights/docker/docker.info'
 _sdk_info_file = '/usr/appinsights/docker/sdk.info'
 
+_docker_socket = 'http://galha-ubuntu:4243'
+
 parser = argparse.ArgumentParser(description="Application Insights container collector/injector")
 parser.add_argument("method", help="The method to run.", choices=['collect', 'inject', 'custom', 'events'])
 parser.add_argument("--script", help="The script to run when choosing 'custom' method")
 
-args = parser.parse_args()
+args = parser.parse_args(['inject'])
 method = args.method
 script = args.script
 

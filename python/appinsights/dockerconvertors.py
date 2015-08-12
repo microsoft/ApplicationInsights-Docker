@@ -87,9 +87,9 @@ def get_container_properties(container, host_name):
             'docker-container-name': container.get('Names', ['N/A'])[0]}
 
 
-def get_container_properties_from_inspect(container, host_name):
+def get_container_properties_from_inspect(inspect, host_name):
     return {'docker-host': host_name,
-            'docker-image': container['Config'].get('Image', 'N/A'),
-            'docker-container-id': container.get('Id', 'N/A'),
-            'docker-container-name': container.get('Names', [container.get('Name', 'N/A')])[0]}
+            'docker-image': inspect['Config'].get('Image', 'N/A') if 'Config' in inspect else 'N/A',
+            'docker-container-id': inspect.get('Id', 'N/A'),
+            'docker-container-name': inspect.get('Names', [inspect.get('Name', 'N/A')])[0]}
 

@@ -6,6 +6,7 @@ import time
 from unittest.mock import Mock, patch, mock_open
 import unittest
 from appinsights.dockerinjector import DockerInjector
+import re
 
 
 class TestDockerInjector(unittest.TestCase):
@@ -52,17 +53,20 @@ class TestDockerInjector(unittest.TestCase):
                 self.assertEqual(expected_id, id)
 
     def test_start(self):
-        container = {'Id': 'c1'}
+        expected_c1 = {'docker-container-id': 'c1', 'docker-host': 'host', 'docker-container-name': 'name1', 'docker-image': 'image1'}
+        expected_c2 = {'docker-container-id': 'c2', 'docker-host': 'host', 'docker-container-name': 'name2', 'docker-image': 'image2'}
+        container = {'Id': 'c1', 'Image':'image1', 'Names':['name1']}
 
         wrapper_mock = Mock()
         wrapper_mock.get_containers.return_value = [container]
+        wrapper_mock.get_host_name.return_value='host'
         wrapper_mock.run_command.return_value = 'file already exists'
-        wrapper_mock.get_events.return_value = [{'Id': 'c2', 'status': 'start'}]
+        wrapper_mock.get_events.return_value = [{'Id': 'c2', 'status': 'start', 'Config':{'Image':'image2'}, 'Name':'name2'}]
 
         def assert_func():
             res = wrapper_mock.run_command.mock_calls
             start = time.time()
-            while len(res) < 4 and time.time() - start < 5:
+            while len(res) < 4 and time.time() - start < 100:
                 time.sleep(1)
             self.assertEqual(4, len(res))
 
@@ -72,14 +76,17 @@ class TestDockerInjector(unittest.TestCase):
             result = ex.submit(lambda: assert_func())
             result.result()
             calls_argument_keys = [keys for name, args, keys in wrapper_mock.run_command.mock_calls]
-            self.assertEqual(2, len([d for d in calls_argument_keys if 'container' in d and 'Id' in d['container'] and d['container']['Id'] == 'c1']))
-            self.assertEqual(2, len([d for d in calls_argument_keys if 'container' in d and 'Id' in d['container'] and d['container']['Id'] == 'c2']))
-
-    def test_when_inject_fail_start_fail(self):
-        container = {'Id': 'c1'}
-        wrapper_mock = Mock()
-        wrapper_mock.get_containers.return_value = [container]
-        wrapper_mock.run_command.side_effect= ['file already exists', Exception('Boom')]
-        wrapper_mock.get_events.return_value = [{'Id': 'c2', 'status': 'start'}]
-        injector = DockerInjector(docker_wrapper=wrapper_mock, docker_info_path="/path/docker.info")
-        injector.start()
+            c1_calls = [d for d in calls_argument_keys if 'container' in d and 'Id' in d['container'] and d['container']['Id'] == 'c1']
+            c2_calls = [d for d in calls_argument_keys if 'container' in d and 'Id' in d['container'] and d['container']['Id'] == 'c2']
+            self.assertEqual(2, len(c1_calls))
+            self.assertEqual(2, len(c2_calls))
+            c1_data = c1_calls[1]['cmd']
+            m1 = re.search('echo ([^>]+)', c1_data)
+            self.assertTrue(m1)
+            actual_c1= {key:val for key,val in [token.split('=') for token in m1.group(1).strip(' ').split(',')]}
+            self.assertDictEqual(expected_c1, actual_c1)
+            c2_data = c2_calls[1]['cmd']
+            m2 = re.search('echo ([^>]+)', c2_data)
+            self.assertTrue(m2)
+            actual_c2= {key:val for key,val in [token.split('=') for token in m2.group(1).strip(' ').split(',')]}
+            self.assertDictEqual(expected_c2, actual_c2)
