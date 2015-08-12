@@ -84,5 +84,6 @@ class DockerInjector(object):
 
     def _get_properties(self, item):
         if 'status' in item:
-            return dockerconvertors.get_container_properties_from_inspect(inspect=item, host_name=self._host_name)
+            inspect = self._docker_wrapper.get_inspection(item)
+            return dockerconvertors.get_container_properties_from_inspect(inspect=inspect, host_name=self._host_name)
         return dockerconvertors.get_container_properties(container=item, host_name=self._host_name)
