@@ -1,6 +1,6 @@
 package com.microsoft.applicationinsights.contracts;
 
-import com.microsoft.applicationinsights.common.Constants;
+import com.microsoft.applicationinsights.common.TestConstants;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -10,7 +10,7 @@ import org.junit.Test;
 public class ContainerStateEventTests {
     @Test
     public void testStateEventJsonParsedSuccessfully() {
-        ContainerStateEvent containerStateEvent = new ContainerStateEvent(Constants.DEFAULT_STATE_EVENT);
+        ContainerStateEvent containerStateEvent = new ContainerStateEvent(TestConstants.DEFAULT_STATE_EVENT);
 
         Assert.assertEquals("docker-container-state", containerStateEvent.getName());
         Assert.assertEquals("ubuntu", containerStateEvent.getProperties().get("docker-image"));

@@ -1,8 +1,7 @@
 package com.microsoft.applicationinsights.agent;
 
 import com.microsoft.applicationinsights.common.ApplicationInsightsSender;
-import com.microsoft.applicationinsights.agent.DockerAgent;
-import com.microsoft.applicationinsights.common.Constants;
+import com.microsoft.applicationinsights.common.TestConstants;
 import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
 import com.microsoft.applicationinsights.providers.MetricProvider;
 import com.microsoft.applicationinsights.python.PythonBootstrapper;
@@ -64,7 +63,7 @@ public class DockerAgentTests {
                     agentUnderTest.stop();
                 }
 
-                return numOfTrackedEvents[0] == 1 || numOfTrackedEvents[0] == 3 ? new ContainerStatsMetric(Constants.DEFAULT_METRIC_EVENT) : null;
+                return numOfTrackedEvents[0] == 1 || numOfTrackedEvents[0] == 3 ? new ContainerStatsMetric(TestConstants.DEFAULT_METRIC_EVENT) : null;
             }
         });
 
@@ -117,7 +116,7 @@ public class DockerAgentTests {
                     agentUnderTest.stop();
                 }
 
-                return numOfTrackedEvents[0] <= numberOfEventsToSend ? new ContainerStatsMetric(Constants.DEFAULT_METRIC_EVENT) : null;
+                return numOfTrackedEvents[0] <= numberOfEventsToSend ? new ContainerStatsMetric(TestConstants.DEFAULT_METRIC_EVENT) : null;
             }
         });
 
