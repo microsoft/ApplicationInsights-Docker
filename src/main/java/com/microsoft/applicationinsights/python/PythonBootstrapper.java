@@ -1,10 +1,7 @@
 package com.microsoft.applicationinsights.python;
 
-import com.microsoft.applicationinsights.common.ArrayUtils;
-import org.apache.commons.io.IOUtils;
-
 import java.io.IOException;
-import java.io.InputStream;
+import com.microsoft.applicationinsights.common.ArrayUtils;
 
 /**
  * Created by yonisha on 7/22/2015.
@@ -45,8 +42,6 @@ public abstract class PythonBootstrapper<T> {
             }
         } catch (IOException e) {
             System.out.println(this.getClass().getSimpleName() + " failed to start python process with error: " + e.getMessage());
-
-            throw e;
         } catch (InterruptedException e) {
             System.out.println(this.getClass().getSimpleName() + " has been interrupted. Error: " + e.getMessage());
         }
@@ -75,15 +70,9 @@ public abstract class PythonBootstrapper<T> {
     }
 
     public String getProcessExitInfo() {
-        String exitInfo;
         String bootstrapperClassName = this.getClass().getSimpleName();
-        exitInfo = "Python bootstrapper " +  bootstrapperClassName + " has exited with exit code: " + this.getExitValue() + "\n";
 
-        if (this.getExitValue() != 0) {
-            exitInfo += "Error message: " + this.getErrorOutput();
-        }
-
-        return exitInfo;
+        return "Python bootstrapper " +  bootstrapperClassName + " has exited with exit code: " + this.getExitValue();
     }
 
     // endregion Public
@@ -102,22 +91,6 @@ public abstract class PythonBootstrapper<T> {
             } catch (IOException e) {
             }
         }
-    }
-
-    private String getErrorOutput() {
-        if (this.process == null) {
-            return null;
-        }
-
-        InputStream errorStream = this.process.getErrorStream();
-        String errorMessage = null;
-        try {
-            errorMessage = IOUtils.toString(errorStream, "utf-8");
-        } catch (IOException e) {
-            System.out.println("Failed to get error message for python process: " + this.getClass().getSimpleName());
-        }
-
-        return errorMessage;
     }
 
     // endregion Private

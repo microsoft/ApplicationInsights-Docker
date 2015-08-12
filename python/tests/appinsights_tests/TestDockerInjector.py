@@ -61,7 +61,8 @@ class TestDockerInjector(unittest.TestCase):
         wrapper_mock.get_containers.return_value = [container]
         wrapper_mock.get_host_name.return_value='host'
         wrapper_mock.run_command.return_value = 'file already exists'
-        wrapper_mock.get_events.return_value = [{'Id': 'c2', 'status': 'start', 'Config':{'Image':'image2'}, 'Name':'name2'}]
+        wrapper_mock.get_events.return_value = [{'time': 1439388853, 'Id': 'c2', 'id': 'c2', 'from': 'image2', 'status': 'start'}]
+        wrapper_mock.get_inspection.return_value = {'Id': 'c2', 'status': 'start', 'Config':{'Image':'image2'}, 'Name':'name2'}
 
         def assert_func():
             res = wrapper_mock.run_command.mock_calls

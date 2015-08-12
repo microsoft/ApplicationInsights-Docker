@@ -16,6 +16,7 @@ public class PythonProcessBuilder  implements ProcessBuilder {
         String[] updatedParams = ArrayUtils.addFirst(PYTHON_EXE_NAME, builderParams);
 
         this.processBuilder = new java.lang.ProcessBuilder(updatedParams);
+        this.processBuilder.redirectError(java.lang.ProcessBuilder.Redirect.INHERIT);
     }
 
     public Process start() throws IOException {
