@@ -45,7 +45,7 @@ class DockerClientWrapper(object):
             yield event
 
     def get_inspection(self, container):
-        return self.client.inspect_container(container=container)
+        return self._client.inspect_container(container=container)
 
 
 class ProductionWrapper(object):
