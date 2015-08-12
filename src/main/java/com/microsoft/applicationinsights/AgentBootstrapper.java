@@ -17,6 +17,8 @@ import java.io.IOException;
  */
 public class AgentBootstrapper {
 
+    // region Public
+
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("Starting Application Insights Docker agent.");
 
@@ -27,22 +29,32 @@ public class AgentBootstrapper {
         }
 
         String instrumentationKey = args[0];
+        ApplicationInsightsSender applicationInsightsSender = new ApplicationInsightsSender(instrumentationKey);
+
+        PythonBootstrapper metricCollectionBootstrapper = new MetricCollectionPythonBoostrapper();
+        Thread metricCollectionAgentThread = createMetricCollectionProcess(applicationInsightsSender, metricCollectionBootstrapper);
+
+        PythonBootstrapper containerStateBootstrapper = new ContainerStatePythonBootstrapper();
+        Thread containerStateThread = createContainerStateProcess(applicationInsightsSender, containerStateBootstrapper);
+
+        Thread containerContextAgentThread = createContainerContextProcess();
+
         AgentBootstrapper agentBootstrapper = new AgentBootstrapper();
-        agentBootstrapper.run(instrumentationKey);
+        agentBootstrapper.run(applicationInsightsSender, metricCollectionAgentThread, containerStateThread, containerContextAgentThread);
 
         System.out.println("Shutting down Application Insights Docker agent.");
     }
 
-    public void run(String instrumentationKey) throws InterruptedException {
-        ApplicationInsightsSender applicationInsightsSender = new ApplicationInsightsSender(instrumentationKey);
+    public void run(
+            ApplicationInsightsSender applicationInsightsSender,
+            Thread metricCollectionAgentThread,
+            Thread containerStateThread,
+            Thread containerContextAgentThread) throws InterruptedException {
 
-        PythonBootstrapper metricCollectionBootstrapper = new MetricCollectionPythonBoostrapper();
-        Thread metricCollectionAgentThread = executeMetricCollectionProcess(applicationInsightsSender, metricCollectionBootstrapper);
-
-        PythonBootstrapper containerStateBootstrapper = new ContainerStatePythonBootstrapper();
-        Thread containerStateThread = executeContainerStateProcess(applicationInsightsSender, containerStateBootstrapper);
-
-        Thread containerContextAgentThread = executeContainerContextProcess();
+        // Starting threads.
+        metricCollectionAgentThread.start();
+        containerContextAgentThread.start();
+        containerStateThread.start();
 
         // Waiting for all threads.
         metricCollectionAgentThread.join();
@@ -50,31 +62,37 @@ public class AgentBootstrapper {
         containerContextAgentThread.join();
     }
 
-    protected Thread executeMetricCollectionProcess(ApplicationInsightsSender aiSender, PythonBootstrapper metricCollectionBootstrapper) {
+    // endregion public
+
+    // region Private
+
+    protected static Thread createMetricCollectionProcess(ApplicationInsightsSender aiSender, PythonBootstrapper metricCollectionBootstrapper) {
         System.out.println("Starting metric collection process.");
         DockerAgent dockerMetricAgent = new DockerAgent(metricCollectionBootstrapper, aiSender);
         Thread metricCollectionAgentThread = new Thread(dockerMetricAgent);
-        metricCollectionAgentThread.start();
+        metricCollectionAgentThread.setDaemon(true);
 
         return metricCollectionAgentThread;
     }
 
-    protected Thread executeContainerContextProcess() {
+    protected static Thread createContainerContextProcess() {
         System.out.println("Starting container context process.");
         PythonBootstrapper containerContextBootstrapper = new ContainerContextPythonBoostrapper();
         DockerContainerContextAgent containerContextAgent = new DockerContainerContextAgent(containerContextBootstrapper);
         Thread containerContextAgentThread = new Thread(containerContextAgent);
-        containerContextAgentThread.start();
+        containerContextAgentThread.setDaemon(true);
 
         return containerContextAgentThread;
     }
 
-    protected Thread executeContainerStateProcess(ApplicationInsightsSender aiSender, PythonBootstrapper containerStateBootstrapper) {
+    protected static Thread createContainerStateProcess(ApplicationInsightsSender aiSender, PythonBootstrapper containerStateBootstrapper) {
         System.out.println("Starting container state process.");
         DockerAgent containerStateAgent = new DockerAgent(containerStateBootstrapper, aiSender);
         Thread containerStateThread = new Thread(containerStateAgent);
-        containerStateThread.start();
+        containerStateThread.setDaemon(true);
 
         return containerStateThread;
     }
+
+    // endregion Private
 }
