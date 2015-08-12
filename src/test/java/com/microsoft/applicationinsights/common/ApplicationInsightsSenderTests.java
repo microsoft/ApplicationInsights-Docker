@@ -31,13 +31,13 @@ public class ApplicationInsightsSenderTests {
     private final String METRIC_TEMPLATE = "{'metric':{'name':'%s','value':0,'count':0,'min':0,'max':0,'std':0},'properties':{'docker-image':'x','docker-host':'x','docker-container-id':'x','docker-container-name':'x'}}";
 
     private TelemetryClient telemetryClientMock;
-    private ApplicationInsightsSender defaultSender;
+    private ApplicationInsightsSender defaultSenderUnderTest;
     private List<Telemetry> telemetries = new ArrayList<Telemetry>();
 
     @Before
     public void testInitialize() {
         initializeTelemetryClientMock();
-        defaultSender = new ApplicationInsightsSender(telemetryClientMock);
+        defaultSenderUnderTest = new ApplicationInsightsSender(telemetryClientMock, new TelemetryFactory());
         telemetries = new ArrayList<Telemetry>();
     }
 
@@ -70,13 +70,13 @@ public class ApplicationInsightsSenderTests {
 
     private void trackContainerStateMetric() {
         ContainerStateEvent containerStateEvent = new ContainerStateEvent(TestConstants.DEFAULT_STATE_EVENT);
-        defaultSender.track(containerStateEvent);
+        defaultSenderUnderTest.track(containerStateEvent);
     }
 
     private void testMetricClassifiedCorrectly(boolean generatePerformanceCounterMetricName, Class expectedTelemetryType) {
         ContainerStatsMetric containerStatsMetric = createContainerStatsMetric(generatePerformanceCounterMetricName);
 
-        defaultSender.track(containerStatsMetric);
+        defaultSenderUnderTest.track(containerStatsMetric);
 
         Mockito.verify(telemetryClientMock, times(1)).track(any(Telemetry.class));
         Assert.assertTrue(expectedTelemetryType.isInstance(telemetries.get(0)));
