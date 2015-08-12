@@ -36,11 +36,11 @@ class TestDockerConvertors(unittest.TestCase):
         self.assertRaises(AssertionError, dockerconvertors.get_cpu_metric, None)
 
     def test_get_cpu_metric_trows_when_stats_is_has_only_one_stat(self):
-        stat = (0, {'cpu_stats': {'cpu_usage': {'total_usage': 0}, 'system_cpu_usage': 0}})
+        stat = [(0, {'cpu_stats': {'cpu_usage': {'total_usage': 0}, 'system_cpu_usage': 0}})]
         self.assertRaises(AssertionError, dockerconvertors.get_cpu_metric, stat)
 
     def test_get_cpu_metric_trows_when_stats_is_empty(self):
-        stat = (0, {'cpu_stats': {'cpu_usage': {'total_usage': 0}, 'system_cpu_usage': 0}})
+        stat = []
         self.assertRaises(AssertionError, dockerconvertors.get_cpu_metric, stat)
 
     def test_per_second_metric(self):
