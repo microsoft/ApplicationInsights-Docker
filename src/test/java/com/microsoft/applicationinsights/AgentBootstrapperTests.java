@@ -38,10 +38,9 @@ public class AgentBootstrapperTests {
         String testPythonScriptPath = getTestPythonScriptPath(PYTHON_TEST_METRIC_EVENT_SCRIPT_FILENAME);
 
         MetricCollectionPythonBoostrapper metricCollectionPythonBoostrapper = new MetricCollectionPythonBoostrapper("custom", "--script", testPythonScriptPath);
+        Thread thread = AgentBootstrapper.createMetricCollectionProcess(aiSenderMock, metricCollectionPythonBoostrapper);
 
-        Thread thread = agentBootstrapperUnderTest.executeMetricCollectionProcess(aiSenderMock, metricCollectionPythonBoostrapper);
-
-        thread.join(3000);
+        agentBootstrapperUnderTest.run(aiSenderMock, thread, createWorklessThread(), createWorklessThread());
 
         verify(aiSenderMock, times(1)).track(any(ContainerStatsMetric.class));
     }
@@ -51,9 +50,9 @@ public class AgentBootstrapperTests {
         String testPythonScriptPath = getTestPythonScriptPath(PYTHON_TEST_STATE_EVENT_SCRIPT_FILENAME);
 
         ContainerStatePythonBootstrapper bootstrapper = new ContainerStatePythonBootstrapper("custom", "--script", testPythonScriptPath);
-        Thread thread = agentBootstrapperUnderTest.executeContainerStateProcess(aiSenderMock, bootstrapper);
+        Thread thread = AgentBootstrapper.createContainerStateProcess(aiSenderMock, bootstrapper);
 
-        thread.join(3000);
+        agentBootstrapperUnderTest.run(aiSenderMock, createWorklessThread(), thread, createWorklessThread());
 
         verify(aiSenderMock, times(1)).track(any(ContainerStateEvent.class));
     }
@@ -70,5 +69,13 @@ public class AgentBootstrapperTests {
         System.out.println("Test python script has been copied to : " + tempPython);
 
         return tempPython.getAbsolutePath();
+    }
+
+    private Thread createWorklessThread() {
+        return new Thread(new Runnable() {
+            @Override
+            public void run() {
+            }
+        });
     }
 }

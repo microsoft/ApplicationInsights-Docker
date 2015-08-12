@@ -1,6 +1,6 @@
 package com.microsoft.applicationinsights.contracts;
 
-import com.microsoft.applicationinsights.common.Constants;
+import com.microsoft.applicationinsights.common.TestConstants;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -20,7 +20,7 @@ public class ContainerStatsMetricTests {
     private final float STD_DEV = 0.04f;
     private final int COUNT = 5;
 
-    private String defaultMetric = String.format(Constants.DEFAULT_METRIC_TEMPLATE, METRIC_NAME, VALUE, COUNT, MIN, MAX, STD_DEV, DOCKER_IMAGE, DOCKER_HOST, DOCKER_CONTAINER_ID, DOCKER_CONTAINER_NAME);
+    private String defaultMetric = String.format(TestConstants.DEFAULT_METRIC_TEMPLATE, METRIC_NAME, VALUE, COUNT, MIN, MAX, STD_DEV, DOCKER_IMAGE, DOCKER_HOST, DOCKER_CONTAINER_ID, DOCKER_CONTAINER_NAME);
 
     @Test
     public void testMetricJsonDeserializedSuccessfully() {

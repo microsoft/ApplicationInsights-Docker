@@ -1,8 +1,7 @@
 package com.microsoft.applicationinsights.providers;
 
-import com.microsoft.applicationinsights.common.Constants;
+import com.microsoft.applicationinsights.common.TestConstants;
 import com.microsoft.applicationinsights.contracts.ContainerStateEvent;
-import com.microsoft.applicationinsights.providers.StateProvider;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -17,7 +16,7 @@ public class StateProviderTests {
 
     @Test
     public void testValidJsonResultsWithContainerStateEvent() throws IOException {
-        ContainerStateEvent event = createProviderAndGetState(Constants.DEFAULT_STATE_EVENT);
+        ContainerStateEvent event = createProviderAndGetState(TestConstants.DEFAULT_STATE_EVENT);
 
         Assert.assertNotNull(event);
     }

@@ -1,9 +1,11 @@
 package com.microsoft.applicationinsights.common;
 
 import com.microsoft.applicationinsights.TelemetryClient;
-import com.microsoft.applicationinsights.common.ApplicationInsightsSender;
+import com.microsoft.applicationinsights.contracts.ContainerStateEvent;
 import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
+import com.microsoft.applicationinsights.extensibility.context.OperationContext;
 import com.microsoft.applicationinsights.internal.perfcounter.Constants;
+import com.microsoft.applicationinsights.telemetry.EventTelemetry;
 import com.microsoft.applicationinsights.telemetry.MetricTelemetry;
 import com.microsoft.applicationinsights.telemetry.PerformanceCounterTelemetry;
 import com.microsoft.applicationinsights.telemetry.Telemetry;
@@ -49,13 +51,34 @@ public class ApplicationInsightsSenderTests {
         testMetricClassifiedCorrectly(true, PerformanceCounterTelemetry.class);
     }
 
+    @Test
+    public void testContaienrStateMetricClassifiedCorrectly() {
+        trackContainerStateMetric();
+
+        Mockito.verify(telemetryClientMock, times(1)).track(any(Telemetry.class));
+        Assert.assertTrue(telemetries.get(0) instanceof EventTelemetry);
+    }
+
+    @Test
+    public void testContainerStateTelemetryEventAssignedWithCorrelationId() {
+        trackContainerStateMetric();
+
+        OperationContext operation = telemetries.get(0).getContext().getOperation();
+        Assert.assertEquals("con_id" , operation.getId());
+        Assert.assertEquals("docker-container-state" , operation.getName());
+    }
+
+    private void trackContainerStateMetric() {
+        ContainerStateEvent containerStateEvent = new ContainerStateEvent(TestConstants.DEFAULT_STATE_EVENT);
+        defaultSender.track(containerStateEvent);
+    }
+
     private void testMetricClassifiedCorrectly(boolean generatePerformanceCounterMetricName, Class expectedTelemetryType) {
         ContainerStatsMetric containerStatsMetric = createContainerStatsMetric(generatePerformanceCounterMetricName);
 
         defaultSender.track(containerStatsMetric);
 
         Mockito.verify(telemetryClientMock, times(1)).track(any(Telemetry.class));
-
         Assert.assertTrue(expectedTelemetryType.isInstance(telemetries.get(0)));
     }
 

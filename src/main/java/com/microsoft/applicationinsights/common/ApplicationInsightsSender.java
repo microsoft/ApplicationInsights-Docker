@@ -15,7 +15,6 @@ import java.util.Map;
  * Created by yonisha on 7/23/2015.
  */
 public class ApplicationInsightsSender {
-    private final static String INSTANCE_NAME_TOTAL = "_Total";
     private TelemetryClient telemetryClient;
 
     // region Ctor
@@ -43,7 +42,9 @@ public class ApplicationInsightsSender {
         } else if (metric instanceof ContainerStateEvent) {
             telemetry = createEventTelemetry((ContainerStateEvent) metric);
         } else {
-            throw new IllegalArgumentException("Unknown metric: " + metric.getClass().getSimpleName());
+            System.err.println("Unknown metric: " + metric.getClass().getSimpleName());
+
+            return;
         }
 
         this.telemetryClient.track(telemetry);
@@ -55,6 +56,12 @@ public class ApplicationInsightsSender {
 
     private Telemetry createEventTelemetry(ContainerStateEvent stateEvent) {
         EventTelemetry telemetry = new EventTelemetry(stateEvent.getName());
+
+        // Setting operation in order to be able to correlate events related to the same container.
+        String containerId = stateEvent.getProperties().get(com.microsoft.applicationinsights.common.Constants.DOCKER_CONTAINER_ID_PROPERTY_KEY);
+        telemetry.getContext().getOperation().setId(containerId);
+        telemetry.getContext().getOperation().setName(stateEvent.getName());
+
         telemetry.getProperties().putAll(stateEvent.getProperties());
 
         return telemetry;
@@ -79,10 +86,10 @@ public class ApplicationInsightsSender {
         }
 
         Map<String, String> properties = telemetry.getProperties();
-        properties.put("docker-host", containerStatsMetric.getDockerHost());
-        properties.put("docker-image", containerStatsMetric.getDockerImage());
-        properties.put("docker-container-name", containerStatsMetric.getDockerContainerName());
-        properties.put("docker-container-id", containerStatsMetric.getDockerContainerId());
+        properties.put(com.microsoft.applicationinsights.common.Constants.DOCKER_HOST_PROPERTY_KEY, containerStatsMetric.getDockerHost());
+        properties.put(com.microsoft.applicationinsights.common.Constants.DOCKER_IMAGE_PROPERTY_KEY, containerStatsMetric.getDockerImage());
+        properties.put(com.microsoft.applicationinsights.common.Constants.DOCKER_CONTAINER_NAME_PROPERTY_KEY, containerStatsMetric.getDockerContainerName());
+        properties.put(com.microsoft.applicationinsights.common.Constants.DOCKER_CONTAINER_ID_PROPERTY_KEY, containerStatsMetric.getDockerContainerId());
 
         return telemetry;
     }
@@ -95,7 +102,7 @@ public class ApplicationInsightsSender {
             performanceCounterTelemetry = new PerformanceCounterTelemetry(
                     Constants.TOTAL_CPU_PC_CATEGORY_NAME,
                     Constants.CPU_PC_COUNTER_NAME,
-                    INSTANCE_NAME_TOTAL,
+                    Constants.INSTANCE_NAME_TOTAL,
                     containerStatsMetric.getValue());
         } else if (metricName.equalsIgnoreCase(Constants.TOTAL_MEMORY_PC_COUNTER_NAME)) {
             performanceCounterTelemetry = new PerformanceCounterTelemetry(

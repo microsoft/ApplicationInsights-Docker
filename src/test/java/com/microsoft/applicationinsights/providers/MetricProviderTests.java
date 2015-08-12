@@ -1,8 +1,7 @@
 package com.microsoft.applicationinsights.providers;
 
-import com.microsoft.applicationinsights.common.Constants;
+import com.microsoft.applicationinsights.common.TestConstants;
 import com.microsoft.applicationinsights.contracts.ContainerStatsMetric;
-import com.microsoft.applicationinsights.providers.MetricProvider;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -17,7 +16,7 @@ public class MetricProviderTests {
 
     @Test
     public void testValidJsonResultsWithContainerStatsMetric() throws IOException {
-        ContainerStatsMetric metric = createProviderAndGetMetric(Constants.DEFAULT_METRIC_EVENT);
+        ContainerStatsMetric metric = createProviderAndGetMetric(TestConstants.DEFAULT_METRIC_EVENT);
 
         Assert.assertNotNull(metric);
     }
