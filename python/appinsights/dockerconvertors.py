@@ -35,8 +35,8 @@ def get_total_blkio(stat):
         return 0
 
 def get_cpu_metric(stats):
-    assert stats is not None and len(stats)>2 ,\
-        "the 'stats' samples must contain more than 1 statistics in order to calculate the cpu metric"
+    assert stats is not None and len(stats)>1 ,\
+        "the 'stats' samples must contain more than 1 statistics in order to calclulate the cpu metric"
 
     cpu_list = [stat['cpu_stats']['cpu_usage']['total_usage'] for time, stat in stats]
     system_cpu_list = [stat['cpu_stats']['system_cpu_usage'] for time, stat in stats]
@@ -55,7 +55,7 @@ def get_cpu_metric(stats):
             'std':statistics.stdev(cpu_percents) if len(cpu_percents) > 1 else None}
 
 def get_per_second_metric(metric_name, func, stats):
-    assert metric_name is not None, "metric_name should not be None"
+    assert metric_name is not None, "metric_name shoud not be None"
     assert func is not None, "func should not be None"
     assert stats is not None and len(stats)>1, "stats should have more than 1 samples in it"
     stats2 = stats[1:]
@@ -87,9 +87,9 @@ def get_container_properties(container, host_name):
             'docker-container-name': container.get('Names', ['N/A'])[0]}
 
 
-def get_container_properties_from_inspect(container, host_name):
+def get_container_properties_from_inspect(inspect, host_name):
     return {'docker-host': host_name,
-            'docker-image': container['Config'].get('Image', 'N/A'),
-            'docker-container-id': container.get('Id', 'N/A'),
-            'docker-container-name': container.get('Names', [container.get('Name', 'N/A')])[0]}
+            'docker-image': inspect['Config'].get('Image', 'N/A') if 'Config' in inspect else 'N/A',
+            'docker-container-id': inspect.get('Id', 'N/A'),
+            'docker-container-name': inspect.get('Names', [inspect.get('Name', 'N/A')])[0]}
 

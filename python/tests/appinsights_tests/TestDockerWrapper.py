@@ -97,7 +97,7 @@ class TestDockerClientWrapper(unittest.TestCase):
             self.assertEqual(1, mock.call_count)
             mock.assert_has_calls([call(base_url="unix://docker.sock")])
 
-    def test_production_wrapper_uses(self):
+    def test_production_wrapper_uses_two_clients(self):
         with patch('appinsights.dockerwrapper.DockerClientWrapper') as mock:
             m1, m2 = Mock(), Mock()
             mock.side_effect = [m1, m2]
@@ -113,3 +113,12 @@ class TestDockerClientWrapper(unittest.TestCase):
             self.assertEqual(1, m2c + m2r)
             self.assertEqual(1, m1c + m2c)
             self.assertEqual(1, m1r + m2r)
+
+    def test_get_inspect(self):
+        expectedResult = 'result'
+        mock = Mock()
+        mock.inspect_container.return_value = expectedResult
+        wrapper = DockerClientWrapper(mock)
+        inspection = wrapper.get_inspection({'Id':'c1'})
+        self.assertEqual(expectedResult, inspection)
+

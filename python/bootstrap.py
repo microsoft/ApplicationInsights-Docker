@@ -17,10 +17,10 @@ args = parser.parse_args()
 method = args.method
 script = args.script
 
-methods = {'collect': lambda: program.run_collect_performance_counters(docker_socket=_docker_socket, sdk_file=_sdk_info_file),
+methods = {'collect': lambda: program.run_collect_performance_counters(docker_socket=_docker_socket, sdk_file=_sdk_info_file, docker_info_file=_docker_info_path),
            'inject': lambda: program.run_injector(docker_socket=_docker_socket, docker_info_path=_docker_info_path),
            'custom': lambda: os.system(script),
-           'events': lambda : program.run_collect_containers_events(docker_socket=_docker_socket)}
+           'events': lambda : program.run_collect_containers_events(docker_socket=_docker_socket, docker_info_file=_docker_info_path)}
 
 assert method in methods
 methods[method]()
