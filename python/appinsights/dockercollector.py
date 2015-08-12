@@ -1,3 +1,4 @@
+from appinsights.dockerinjector import DockerInjector
 from appinsights.dockerwrapper import DockerWrapperError
 
 __author__ = 'galha'
@@ -7,6 +8,7 @@ import concurrent.futures
 import time
 from appinsights import dockerconvertors
 import dateutil.parser
+import re, os
 
 
 class DockerCollector(object):
@@ -15,16 +17,19 @@ class DockerCollector(object):
     def _default_print(text):
         print(text, flush=True)
 
-    def __init__(self, docker_wrapper, samples_in_each_metric=2, send_event=_default_print,
+    def __init__(self, docker_wrapper, docker_injector, samples_in_each_metric=2, send_event=_default_print,
                  sdk_file='/usr/appinsights/docker/sdk.info'):
         super().__init__()
         assert docker_wrapper is not None, 'docker_client cannot be None'
+        assert docker_injector is not None, 'docker_injector cannot be None'
         assert samples_in_each_metric > 1, 'samples_in_each_metric must be greater than 1, given: {0}'.format(
             samples_in_each_metric)
         self._sdk_file = sdk_file
         self._docker_wrapper = docker_wrapper
+        self._docker_injector = docker_injector
         self._samples_in_each_metric = samples_in_each_metric
         self._send_event = send_event
+        self._my_container_id = None
         self._containers_state = {}
 
     def collect_stats_and_send(self):
@@ -33,10 +38,15 @@ class DockerCollector(object):
         cpu, memory, rx_bytes ,tx_bytes, blkio metrics
         """
 
+        if self._my_container_id is None:
+            self._my_container_id = self._docker_injector.get_my_container_id()
+
         host_name = self._docker_wrapper.get_host_name()
         containers = self._docker_wrapper.get_containers()
         self.update_containers_state(containers=containers)
-        containers_without_sdk = [v['container'] for k, v in self._containers_state.items() if not v['sdk']]
+        containers_without_sdk = [v['container'] for k, v in self._containers_state.items() if
+                                  k == self._my_container_id or not v['sdk']]
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=max(len(containers), 30)) as executor:
             container_stats = list(
                 executor.map(
@@ -44,7 +54,7 @@ class DockerCollector(object):
                                                                                  stats_to_bring=self._samples_in_each_metric)),
                     containers_without_sdk))
 
-        for container, stats in [(container, stats) for container, stats in container_stats if len(stats)>1]:
+        for container, stats in [(container, stats) for container, stats in container_stats if len(stats) > 1]:
             metrics = dockerconvertors.convert_to_metrics(stats)
             properties = dockerconvertors.get_container_properties(container, host_name)
             for metric in metrics:
@@ -52,7 +62,8 @@ class DockerCollector(object):
 
     def _container_has_sdk(self, container):
         try:
-            result = self._docker_wrapper.run_command(container, DockerCollector._cmd_template.format(file=self._sdk_file))
+            result = self._docker_wrapper.run_command(container,
+                                                      DockerCollector._cmd_template.format(file=self._sdk_file))
             result = result.strip()
             return result == 'yes'
         except DockerWrapperError:

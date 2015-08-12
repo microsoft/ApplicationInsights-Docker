@@ -13,12 +13,15 @@ def run_injector(docker_socket, docker_info_path):
         docker_info_path=docker_info_path)
 
     while True:
-        injector.inject()
+        injector.start()
         time.sleep(30)
 
-def run_collect_performance_counters(docker_socket, sdk_file):
+def run_collect_performance_counters(docker_socket, sdk_file, docker_info_file):
+    docker_wrapper=get_production_docker_wrapper(base_url=docker_socket)
+    docker_injector  = DockerInjector(docker_wrapper=docker_wrapper, docker_info_path=docker_info_file)
     collector = DockerCollector(
-        docker_wrapper=get_production_docker_wrapper(base_url=docker_socket),
+        docker_wrapper=docker_wrapper,
+        docker_injector=docker_injector,
         samples_in_each_metric=5,
         sdk_file=sdk_file)
 
@@ -26,9 +29,12 @@ def run_collect_performance_counters(docker_socket, sdk_file):
         collector.collect_stats_and_send()
         time.sleep(10)
 
-def run_collect_containers_events(docker_socket):
+def run_collect_containers_events(docker_socket, docker_info_file):
+    docker_wrapper=get_production_docker_wrapper(base_url=docker_socket)
+    docker_injector  = DockerInjector(docker_wrapper=docker_wrapper, docker_info_path=docker_info_file)
     collector = DockerCollector(
-        docker_wrapper=get_production_docker_wrapper(base_url=docker_socket),
+        docker_wrapper=docker_wrapper,
+        docker_injector=docker_injector,
         samples_in_each_metric=5,
         sdk_file=None)
     while True:
@@ -36,3 +42,4 @@ def run_collect_containers_events(docker_socket):
             collector.collect_container_events()
         except Exception as e:
             print(e, file=sys.stderr)
+            time.sleep(10)

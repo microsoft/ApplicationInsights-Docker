@@ -45,7 +45,10 @@ class DockerClientWrapper(object):
             yield event
 
     def get_inspection(self, container):
-        return self._client.inspect_container(container=container)
+        try:
+            return self._client.inspect_container(container=container)
+        except (errors.APIError, ReadTimeoutError, requests.exceptions.ReadTimeout, HTTPError) as e:
+            raise DockerWrapperError(e)
 
 
 class ProductionWrapper(object):

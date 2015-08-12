@@ -118,3 +118,9 @@ class TestDockerConvertors(unittest.TestCase):
         for metric in actual_metrics:
             self.assertTrue(metric['name'] in expected_metrics)
             self._assert_metrics_equals(expected_metrics[metric['name']], metric)
+
+    def test_get_container_properties_from_inspect(self):
+        expected = {'docker-host': 'host1', 'docker-image': 'image1', 'docker-container-id': 'c1', 'docker-container-name': 'container1'}
+        inspect = {'Name':expected['docker-container-name'], 'Id':expected['docker-container-id'], 'Config':{'Image': expected['docker-image']}}
+        properties = dockerconvertors.get_container_properties_from_inspect(inspect, expected['docker-host'])
+        self.assertDictEqual(expected, properties)
