@@ -37,6 +37,21 @@ class TestDockerInjector(unittest.TestCase):
                 self.assertEqual(0, wrapper_mock.run_command.call_count)
                 self.assertEqual(expected_id, id)
 
+    def test_get_my_container_id_when_file_exists_with_new_line(self):
+        template = 'docker-container-name=/boring_brattain,docker-image=ttt,docker-host=galha-ubuntu,docker-container-id={0}\n'
+        expected_id = 'cd9d134b64807148faa24a17519c8e1a2650b825d4d38944ac54281b2dd1d94e'
+        data = template.format(expected_id)
+        with patch('os.path.exists') as exists:
+            exists.return_value = True
+            with patch.object(builtins, 'open', mock_open(read_data=data)):
+                wrapper_mock = Mock()
+                wrapper_mock.get_containers.return_value = [{'Id': 'c1'}]
+                wrapper_mock.run_command.return_value = 'file already exists'
+                injector = DockerInjector(docker_wrapper=wrapper_mock, docker_info_path="/path/docker.info")
+                id = injector.get_my_container_id()
+                self.assertEqual(0, wrapper_mock.run_command.call_count)
+                self.assertEqual(expected_id, id)
+
     def test_get_my_container_id_when_file_not_exists(self):
         template = 'docker-container-name=/boring_brattain,docker-image=ttt,docker-container-id={0},docker-host=galha-ubuntu'
         expected_id = 'cd9d134b64807148faa24a17519c8e1a2650b825d4d38944ac54281b2dd1d94e'
