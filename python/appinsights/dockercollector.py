@@ -1,17 +1,17 @@
-from appinsights.dockerinjector import DockerInjector
-from appinsights.dockerwrapper import DockerWrapperError
-
 __author__ = 'galha'
 
-from requests.packages.urllib3.exceptions import HTTPError
 import concurrent.futures
 import time
-from appinsights import dockerconvertors
 import dateutil.parser
-import re, os
+from appinsights.dockerwrapper import DockerWrapperError
+from appinsights import dockerconvertors
 
 
 class DockerCollector(object):
+    """ The application insights docker collector,
+    used to collect data from the docker remote API (events, and performance counters)
+    """
+
     _cmd_template = "/bin/sh -c \"[ -f {file} ] && echo yes || echo no\""
 
     def _default_print(text):
@@ -19,6 +19,15 @@ class DockerCollector(object):
 
     def __init__(self, docker_wrapper, docker_injector, samples_in_each_metric=2, send_event=_default_print,
                  sdk_file='/usr/appinsights/docker/sdk.info'):
+        """ Initializes a new instance of the class.
+
+        :param docker_wrapper: A docker client wrapper instance
+        :param docker_injector: A docker docker injector instance
+        :param samples_in_each_metric: The Number of samples to use in each metric
+        :param send_event: Function to send event
+        :param sdk_file: The sdk file location
+        :return:
+        """
         super().__init__()
         assert docker_wrapper is not None, 'docker_client cannot be None'
         assert docker_injector is not None, 'docker_injector cannot be None'
@@ -43,7 +52,7 @@ class DockerCollector(object):
 
         host_name = self._docker_wrapper.get_host_name()
         containers = self._docker_wrapper.get_containers()
-        self.update_containers_state(containers=containers)
+        self._update_containers_state(containers=containers)
         containers_without_sdk = [v['container'] for k, v in self._containers_state.items() if
                                   k == self._my_container_id or not v['sdk']]
 
@@ -60,44 +69,11 @@ class DockerCollector(object):
             for metric in metrics:
                 self._send_event({'metric': metric, 'properties': properties})
 
-    def _container_has_sdk(self, container):
-        try:
-            result = self._docker_wrapper.run_command(container,
-                                                      DockerCollector._cmd_template.format(file=self._sdk_file))
-            result = result.strip()
-            return result == 'yes'
-        except DockerWrapperError:
-            return False
-
-    def update_containers_state(self, containers):
-        self._remove_old_containers(containers)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max(len(containers), 30)) as executor:
-            list(executor.map(lambda c: self._update_container_state(c), containers))
-
-    def _remove_old_containers(self, containers):
-        curr_containers = {c['Id']: c for c in containers}
-        keys = [k for k in self._containers_state]
-        for key in [key for key in keys if key not in curr_containers]:
-            del self._containers_state[key]
-
-    def _update_container_state(self, container):
-        id = container['Id']
-        if id not in self._containers_state:
-            sdk = self._container_has_sdk(container)
-            self._containers_state[id] = {'sdk': sdk, 'time': time.time(), 'container': container}
-            return sdk
-        status = self._containers_state[id]
-        if status['sdk']:
-            return True
-
-        if status['time'] > time.time() - 60:
-            sdk = self._container_has_sdk(container)
-            status['sdk'] = sdk
-            return sdk
-
-        return False
-
     def collect_container_events(self):
+        """ Collects the container events (start, stop, die, pause, unpause)
+        and sends then using the send_event function given in the constructor
+        :return:
+        """
         event_name_template = 'docker-container-{0}'
         host_name = self._docker_wrapper.get_host_name()
         for event in self._docker_wrapper.get_events():
@@ -128,3 +104,40 @@ class DockerCollector(object):
                 properties['docker-duration-days'] = duration_seconds / 86400
             event_data = {'name': event_name, 'properties': properties}
             self._send_event(event_data)
+
+    def _container_has_sdk(self, container):
+        try:
+            result = self._docker_wrapper.run_command(container,
+                                                      DockerCollector._cmd_template.format(file=self._sdk_file))
+            result = result.strip()
+            return result == 'yes'
+        except DockerWrapperError:
+            return False
+
+    def _update_containers_state(self, containers):
+        self._remove_old_containers(containers)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max(len(containers), 30)) as executor:
+            list(executor.map(lambda c: self._update_container_state(c), containers))
+
+    def _remove_old_containers(self, containers):
+        curr_containers = {c['Id']: c for c in containers}
+        keys = [k for k in self._containers_state]
+        for key in [key for key in keys if key not in curr_containers]:
+            del self._containers_state[key]
+
+    def _update_container_state(self, container):
+        id = container['Id']
+        if id not in self._containers_state:
+            sdk = self._container_has_sdk(container)
+            self._containers_state[id] = {'sdk': sdk, 'time': time.time(), 'container': container}
+            return sdk
+        status = self._containers_state[id]
+        if status['sdk']:
+            return True
+
+        if status['time'] > time.time() - 60:
+            sdk = self._container_has_sdk(container)
+            status['sdk'] = sdk
+            return sdk
+
+        return False

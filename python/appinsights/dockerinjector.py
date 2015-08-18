@@ -8,11 +8,20 @@ from appinsights import dockerconvertors
 
 
 class DockerInjector(object):
+    """
+    Application insights docker container injector,
+    used to inject the container context to running containers
+    """
     _default_bash = "bash"
     _mkdir_template = "mkdir -p \"{directory}\""
     _create_file_template = "/bin/sh -c \"[ ! -f {directory}/{file} ] && `echo {properties} > {directory}/{file}` && echo created file || echo file already exists\""
 
     def __init__(self, docker_wrapper, docker_info_path):
+        """ Initializes a new instance of the class.
+        :param docker_wrapper: a docker wrapper instance
+        :param docker_info_path: (str). The file path where to inject the context
+        :return:
+        """
         self._docker_wrapper = docker_wrapper
         self._docker_info_path = docker_info_path
         self._host_name = None
@@ -21,6 +30,9 @@ class DockerInjector(object):
         self._my_container_id = None
 
     def inject_context(self):
+        """ Injects the context to all running containers
+        :return:
+        """
         containers = self._docker_wrapper.get_containers()
         if self._host_name is None:
             self._host_name = self._docker_wrapper.get_host_name()
@@ -32,6 +44,10 @@ class DockerInjector(object):
         return results
 
     def start(self):
+        """ start to inject the context to all running containers,
+        and listen to containers events to inject to inject the context to new created containers.
+        :return:
+        """
         with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
             executor.submit(lambda : self.inject_context())
             executor.map(
@@ -42,9 +58,15 @@ class DockerInjector(object):
 
     @property
     def docker_info_path(self):
+        """ Gets the docker info file path
+        :return: The docker info file path
+        """
         return self._docker_info_path
 
     def get_my_container_id(self):
+        """ Gets the container id of the caller.
+        :return: The container Id of the caller, None if the call was made not within a container
+        """
         if self._my_container_id is not None:
             return self._my_container_id
 
@@ -58,7 +80,7 @@ class DockerInjector(object):
         # get the context from the injected file
         with open(self.docker_info_path, mode='r') as f:
             context = f.read()
-            match = re.search('docker-container-id=([^,]+)', context)
+            match = re.search('docker-container-id=([a-zA-Z0-9]+)', context)
             if match:
                 self._my_container_id = match.group(1)
                 return self._my_container_id
@@ -67,6 +89,10 @@ class DockerInjector(object):
         return None
 
     def inject_container(self, container):
+        """ Injects the container context into the given container
+        :param container: The container to inject
+        :return:
+        """
         try:
             mkdir_cmd = DockerInjector._mkdir_template.format(directory=self._dirName)
             self._docker_wrapper.run_command(container=container, cmd=mkdir_cmd)

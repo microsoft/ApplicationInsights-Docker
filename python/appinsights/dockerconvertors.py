@@ -2,6 +2,11 @@ __author__ = 'galha'
 import statistics
 
 def convert_to_metrics(stats):
+    """ convert the docker container stats list to ai metrices
+    :param stats: The docker container stats list
+    :return: List of Ai Metrics (cpu, rx, tx, blkio),
+    each metric is a dict of (name, value, count, min, max, and std)
+    """
     assert stats is not None and len(stats)>1 ,"stats should have at least 2 samples in it"
     return [get_cpu_metric(stats=stats),
             get_simple_metric(
@@ -26,6 +31,10 @@ def convert_to_metrics(stats):
             )]
 
 def get_total_blkio(stat):
+    """ Gets the total blkio out of the docker stat
+    :param stat: The docker stat
+    :return: The blkio
+    """
     io_list = stat['blkio_stats']['io_service_bytes_recursive']
     if len(io_list)>0:
         total_dics = list(filter(lambda dic: dic['op'] == 'Total', io_list))
@@ -35,6 +44,10 @@ def get_total_blkio(stat):
         return 0
 
 def get_cpu_metric(stats):
+    """ Gets the cpu metric from the docker stats list
+    :param stats: The docker stats list
+    :return: A cpu metric
+    """
     assert stats is not None and len(stats)>1 ,\
         "the 'stats' samples must contain more than 1 statistics in order to calclulate the cpu metric"
 
@@ -55,6 +68,13 @@ def get_cpu_metric(stats):
             'std':statistics.stdev(cpu_percents) if len(cpu_percents) > 1 else None}
 
 def get_per_second_metric(metric_name, func, stats):
+    """ Gets a per second metric out of the docker stats list,
+    per second valuates the time difference in time between every two samples
+    :param metric_name: The metric name
+    :param func: A function which gets the value of the sample out of the stat object
+    :param stats: The docker stats list
+    :return: Ai metric
+    """
     assert metric_name is not None, "metric_name shoud not be None"
     assert func is not None, "func should not be None"
     assert stats is not None and len(stats)>1, "stats should have more than 1 samples in it"
@@ -69,18 +89,29 @@ def get_per_second_metric(metric_name, func, stats):
             'std':statistics.stdev(samples) if len(samples) > 1 else None}
 
 def get_simple_metric(metric_name, func, stats):
-        assert metric_name is not None
-        assert func is not None
-        assert stats is not None and len(stats)>1
-        samples = [func(stat) for time, stat in stats]
-        return {'name': metric_name,
-                'value':statistics.mean(samples),
-                'count':len(samples),
-                'min':min(samples),
-                'max':max(samples),
-                'std':statistics.stdev(samples) if len(samples) > 1 else None}
+    """ Gets an ai metric from the stats list (count, average, min, max and std)
+    :param metric_name: The metric name
+    :param func: A function which gets the value of the sample out of the stat object
+    :param stats: The docker stats list
+    :return: Ai metric
+    """
+    assert metric_name is not None
+    assert func is not None
+    assert stats is not None and len(stats)>1
+    samples = [func(stat) for time, stat in stats]
+    return {'name': metric_name,
+            'value':statistics.mean(samples),
+            'count':len(samples),
+            'min':min(samples),
+            'max':max(samples),
+            'std':statistics.stdev(samples) if len(samples) > 1 else None}
 
 def get_container_properties(container, host_name):
+    """ Gets the container properties from a container object
+    :param container: The container object
+    :param host_name: The host name
+    :return: dict of (docker-hst, docker-omage, docker-container-id, docker-container-name)
+    """
     return {'docker-host': host_name,
             'docker-image': container.get('Image', 'N/A'),
             'docker-container-id': container.get('Id', 'N/A'),
@@ -88,6 +119,11 @@ def get_container_properties(container, host_name):
 
 
 def get_container_properties_from_inspect(inspect, host_name):
+    """ Gets the container properties from an inspect object
+    :param inspect: The inspect object
+    :param host_name: The host name
+    :return: dict of (docker-hst, docker-omage, docker-container-id, docker-container-name)
+    """
     return {'docker-host': host_name,
             'docker-image': inspect['Config'].get('Image', 'N/A') if 'Config' in inspect else 'N/A',
             'docker-container-id': inspect.get('Id', 'N/A'),

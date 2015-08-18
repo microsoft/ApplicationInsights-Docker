@@ -12,7 +12,14 @@ def get_production_docker_wrapper(base_url):
 
 
 class DockerClientWrapper(object):
+    """ A wrapper class on the docker client
+    """
+
     def __init__(self, docker_client):
+        """ Initializes a new instance of the class.
+        :param docker_client:
+        :return:
+        """
         assert docker_client is not None, 'docker_client cannot be None'
         self._client = docker_client
 
