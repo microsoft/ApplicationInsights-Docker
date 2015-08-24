@@ -97,12 +97,12 @@ class TestDockerInjector(unittest.TestCase):
             self.assertEqual(2, len(c1_calls))
             self.assertEqual(2, len(c2_calls))
             c1_data = c1_calls[1]['cmd']
-            m1 = re.search('echo ([^>]+)', c1_data)
+            m1 = re.search('printf ([^>]+)', c1_data)
             self.assertTrue(m1)
             actual_c1= {key:val for key,val in [token.split('=') for token in m1.group(1).strip(' ').split(',')]}
             self.assertDictEqual(expected_c1, actual_c1)
             c2_data = c2_calls[1]['cmd']
-            m2 = re.search('echo ([^>]+)', c2_data)
+            m2 = re.search('printf ([^>]+)', c2_data)
             self.assertTrue(m2)
             actual_c2= {key:val for key,val in [token.split('=') for token in m2.group(1).strip(' ').split(',')]}
             self.assertDictEqual(expected_c2, actual_c2)
