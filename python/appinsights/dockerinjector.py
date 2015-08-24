@@ -14,7 +14,7 @@ class DockerInjector(object):
     """
     _default_bash = "bash"
     _mkdir_template = "mkdir -p \"{directory}\""
-    _create_file_template = "/bin/sh -c \"[ ! -f {directory}/{file} ] && `echo {properties} > {directory}/{file}` && echo created file || echo file already exists\""
+    _create_file_template = "/bin/sh -c \"[ ! -f {directory}/{file} ] && `printf {properties} > {directory}/{file}` && echo created file || echo file already exists\""
 
     def __init__(self, docker_wrapper, docker_info_path):
         """ Initializes a new instance of the class.
