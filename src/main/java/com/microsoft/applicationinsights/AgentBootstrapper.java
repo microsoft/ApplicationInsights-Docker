@@ -9,6 +9,7 @@ import com.microsoft.applicationinsights.python.MetricCollectionPythonBoostrappe
 import com.microsoft.applicationinsights.python.PythonBootstrapper;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * Created by yonisha on 7/22/2015.
@@ -23,15 +24,20 @@ public class AgentBootstrapper {
         System.out.println("Starting Application Insights Docker agent.");
 
         if (args.length == 0) {
-            System.out.println("Instrumentation key required.");
+            // TODO: print 'Usage: ...'
+            System.out.println("Instrumentation key is mandatory (ikey).");
 
             return;
         }
 
-        String instrumentationKey = args[0];
+        HashMap<String, String> argumentsMap = parseArguments(args);
+
+        // TODO: Create object for argument verification (type, existence, default value etc.)
+        String instrumentationKey = argumentsMap.get("ikey");
         ApplicationInsightsSender applicationInsightsSender = new ApplicationInsightsSender(instrumentationKey);
 
-        PythonBootstrapper metricCollectionBootstrapper = new MetricCollectionPythonBoostrapper();
+        int sampleRateFromArgument = getSampleRateFromArgument(argumentsMap);
+        PythonBootstrapper metricCollectionBootstrapper = new MetricCollectionPythonBoostrapper(sampleRateFromArgument);
         Thread metricCollectionAgentThread = createMetricCollectionProcess(applicationInsightsSender, metricCollectionBootstrapper);
 
         PythonBootstrapper containerStateBootstrapper = new ContainerStatePythonBootstrapper();
@@ -43,6 +49,27 @@ public class AgentBootstrapper {
         agentBootstrapper.run(applicationInsightsSender, metricCollectionAgentThread, containerStateThread, containerContextAgentThread);
 
         System.out.println("Shutting down Application Insights Docker agent.");
+    }
+
+    // TODO: move to a dedicate object
+    private static int getSampleRateFromArgument(HashMap<String, String> argumentsMap) {
+        final String intervalArgument = "collect-interval";
+        String sampleIntervalStr = argumentsMap.get(intervalArgument);
+
+        int sampleInterval = 60;
+        if (sampleIntervalStr != null) {
+            try {
+                sampleInterval = (int)Double.parseDouble(sampleIntervalStr);
+            } catch (NumberFormatException e) {
+                System.err.print("Failed to parse '" + sampleIntervalStr +  "' as '" + intervalArgument + "' argument - must be a number.");
+            }
+        } else {
+            System.out.println("No collect interval argument provided.");
+        }
+
+        System.out.println("Collect interval is set to " + sampleInterval + " seconds.");
+
+        return sampleInterval;
     }
 
     public void run(
@@ -65,6 +92,17 @@ public class AgentBootstrapper {
     // endregion public
 
     // region Private
+
+    private static HashMap parseArguments(String[] args) {
+        HashMap<String, String> arguments = new HashMap<String, String>();
+
+        for (String arg : args) {
+            String[] kv = arg.split("=");
+            arguments.put(kv[0], kv[1]);
+        }
+
+        return arguments;
+    }
 
     protected static Thread createMetricCollectionProcess(ApplicationInsightsSender aiSender, PythonBootstrapper metricCollectionBootstrapper) {
         System.out.println("Starting metric collection process.");

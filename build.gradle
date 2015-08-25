@@ -40,6 +40,7 @@ task copyApplicationLibs(type: Copy) {
     into "$rootDir/build/docker"
 }
 
+// Installing python required libraries.
 task installPythonLibraties << {
     File theInfoFile = new File("$rootDir/docker/requirements.txt")
     theInfoFile.eachLine { line ->
