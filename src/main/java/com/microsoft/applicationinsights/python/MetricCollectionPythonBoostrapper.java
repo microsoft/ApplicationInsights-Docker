@@ -12,6 +12,8 @@ public class MetricCollectionPythonBoostrapper extends PythonBootstrapper<Metric
 
     private static final String BOOTSTRAPPER_ARG = "collect";
 
+    // region Ctors
+
     protected MetricCollectionPythonBoostrapper(ProcessBuilder processBuilder) {
         super(processBuilder);
     }
@@ -20,12 +22,26 @@ public class MetricCollectionPythonBoostrapper extends PythonBootstrapper<Metric
         super(bootstrapperParams);
     }
 
-    public MetricCollectionPythonBoostrapper() {
-        this(BOOTSTRAPPER_ARG);
+    public MetricCollectionPythonBoostrapper(int collectInterval) {
+        this(BOOTSTRAPPER_ARG, generateCollectIntervalArgument(collectInterval));
     }
+
+    // endregion Ctors
+
+    // region Public methods
 
     @Override
     public MetricProvider getResult() {
         return new MetricProvider(new BufferedReader(new InputStreamReader(process.getInputStream())));
     }
+
+    // endregion Public methods
+
+    // region Private methods
+
+    private static String generateCollectIntervalArgument(int collectInterval) {
+        return String.format("--collect-interval=%s", String.valueOf(collectInterval));
+    }
+
+    // endregion Private methods
 }

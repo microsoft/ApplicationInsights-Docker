@@ -1,6 +1,5 @@
 __author__ = 'galha'
 
-
 from appinsights.dockercollector import DockerCollector
 from appinsights.dockerwrapper import get_production_docker_wrapper
 from appinsights.dockerinjector import DockerInjector
@@ -16,7 +15,7 @@ def run_injector(docker_socket, docker_info_path):
         injector.start()
         time.sleep(30)
 
-def run_collect_performance_counters(docker_socket, sdk_file, docker_info_file):
+def run_collect_performance_counters(docker_socket, sdk_file, docker_info_file, collect_interval):
     docker_wrapper=get_production_docker_wrapper(base_url=docker_socket)
     docker_injector  = DockerInjector(docker_wrapper=docker_wrapper, docker_info_path=docker_info_file)
     collector = DockerCollector(
@@ -27,7 +26,7 @@ def run_collect_performance_counters(docker_socket, sdk_file, docker_info_file):
 
     while True:
         collector.collect_stats_and_send()
-        time.sleep(10)
+        time.sleep(float(collect_interval))
 
 def run_collect_containers_events(docker_socket, docker_info_file):
     docker_wrapper=get_production_docker_wrapper(base_url=docker_socket)
