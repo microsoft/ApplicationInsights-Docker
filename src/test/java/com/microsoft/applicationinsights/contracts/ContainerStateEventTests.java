@@ -8,11 +8,19 @@ import org.junit.Test;
  * Created by yonisha on 8/6/2015.
  */
 public class ContainerStateEventTests {
+
     @Test
     public void testStateEventJsonParsedSuccessfully() {
         ContainerStateEvent containerStateEvent = new ContainerStateEvent(TestConstants.DEFAULT_STATE_EVENT);
 
         Assert.assertEquals("docker-container-state", containerStateEvent.getName());
         Assert.assertEquals("ubuntu", containerStateEvent.getProperties().get("docker-image"));
+    }
+
+    @Test
+    public void testStateEventIkeyParsedSuccessfully() {
+        ContainerStateEvent containerStateEvent = new ContainerStateEvent(TestConstants.DEFAULT_STATE_EVENT);
+
+        Assert.assertEquals("instrumentation_key", containerStateEvent.getInstrumentationKey());
     }
 }

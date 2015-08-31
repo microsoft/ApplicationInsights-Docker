@@ -54,7 +54,7 @@ class DockerCollector(object):
         containers = self._docker_wrapper.get_containers()
         self._update_containers_state(containers=containers)
         containers_without_sdk = [v['container'] for k, v in self._containers_state.items() if
-                                  k == self._my_container_id or v['ikey'] is not None]
+                                  k == self._my_container_id or v['ikey'] is None]
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max(len(containers), 30)) as executor:
             container_stats = list(
@@ -105,7 +105,7 @@ class DockerCollector(object):
                 properties['docker-duration-minutes'] = duration_seconds / 60
                 properties['docker-duration-hours'] = duration_seconds / 3600
                 properties['docker-duration-days'] = duration_seconds / 86400
-            event_data = {'name': event_name, 'ikey': ikey_to_send_event, 'properties': properties}
+            event_data = {'name': event_name, 'ikey': ikey_to_send_event if ikey_to_send_event is not None else '', 'properties': properties}
             self._send_event(event_data)
 
     def _container_has_sdk(self, container):
@@ -121,10 +121,14 @@ class DockerCollector(object):
         containers = self._docker_wrapper.get_containers()
         self._update_containers_state(containers=containers)
 
-        return self._containers_state[container_id]['ikey']
+        if container_id in self._containers_state.keys():
+            return self._containers_state[container_id]['ikey']
+        else:
+            return None
 
     def _update_containers_state(self, containers):
-        self._remove_old_containers(containers)
+        # TODO: should not remove right away - when stoping container we still want to send the stop event to the ikey, but the container is removed.
+        # self._remove_old_containers(containers)
         with concurrent.futures.ThreadPoolExecutor(max_workers=max(len(containers), 30)) as executor:
             list(executor.map(lambda c: self._update_container_state(c), containers))
 
@@ -137,6 +141,7 @@ class DockerCollector(object):
     def _update_container_state(self, container):
         id = container['Id']
         if id not in self._containers_state:
+            time.sleep(5)
             ikey = self._get_container_sdk_ikey(container)
             self._containers_state[id] = {'ikey': ikey, 'time': time.time(), 'container': container}
             return ikey
