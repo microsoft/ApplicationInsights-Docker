@@ -12,7 +12,7 @@ class DockerCollector(object):
     used to collect data from the docker remote API (events, and performance counters)
     """
 
-    _cmd_template = "/bin/sh -c \"[ -f {file} ] && echo yes || echo no\""
+    _cmd_template = "/bin/sh -c \"[ -f {file} ] && cat {file}\""
 
     def _default_print(text):
         print(text, flush=True)
@@ -54,7 +54,7 @@ class DockerCollector(object):
         containers = self._docker_wrapper.get_containers()
         self._update_containers_state(containers=containers)
         containers_without_sdk = [v['container'] for k, v in self._containers_state.items() if
-                                  k == self._my_container_id or not v['sdk']]
+                                  k == self._my_container_id or v['ikey'] is not None]
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max(len(containers), 30)) as executor:
             container_stats = list(
@@ -84,6 +84,9 @@ class DockerCollector(object):
             event_name = event_name_template.format(status)
             inspect = self._docker_wrapper.get_inspection(event)
             properties = dockerconvertors.get_container_properties_from_inspect(inspect, host_name)
+
+            ikey_to_send_event = self._get_container_sdk_ikey_from_containers_state(properties['docker-container-id'])
+
             properties['docker-status'] = status
             properties['docker-Created'] = inspect['Created']
             properties['docker-StartedAt'] = inspect['State']['StartedAt']
@@ -102,7 +105,7 @@ class DockerCollector(object):
                 properties['docker-duration-minutes'] = duration_seconds / 60
                 properties['docker-duration-hours'] = duration_seconds / 3600
                 properties['docker-duration-days'] = duration_seconds / 86400
-            event_data = {'name': event_name, 'properties': properties}
+            event_data = {'name': event_name, 'ikey': ikey_to_send_event, 'properties': properties}
             self._send_event(event_data)
 
     def _container_has_sdk(self, container):
@@ -110,9 +113,15 @@ class DockerCollector(object):
             result = self._docker_wrapper.run_command(container,
                                                       DockerCollector._cmd_template.format(file=self._sdk_file))
             result = result.strip()
-            return result == 'yes'
+            return result if result != '' else None
         except DockerWrapperError:
-            return False
+            return None
+
+    def _get_container_sdk_ikey_from_containers_state(self, container_id):
+        containers = self._docker_wrapper.get_containers()
+        self._update_containers_state(containers=containers)
+
+        return self._containers_state[container_id]['ikey']
 
     def _update_containers_state(self, containers):
         self._remove_old_containers(containers)
@@ -128,16 +137,22 @@ class DockerCollector(object):
     def _update_container_state(self, container):
         id = container['Id']
         if id not in self._containers_state:
-            sdk = self._container_has_sdk(container)
-            self._containers_state[id] = {'sdk': sdk, 'time': time.time(), 'container': container}
-            return sdk
+            ikey = self._get_container_sdk_ikey(container)
+            self._containers_state[id] = {'ikey': ikey, 'time': time.time(), 'container': container}
+            return ikey
+
         status = self._containers_state[id]
-        if status['sdk']:
-            return True
+        if status['ikey'] is not None:
+            return status['ikey']
 
         if status['time'] > time.time() - 60:
-            sdk = self._container_has_sdk(container)
-            status['sdk'] = sdk
-            return sdk
+            ikey = self._get_container_sdk_ikey(container)
+            status['ikey'] = ikey
+            return ikey
 
-        return False
+        return None
+
+    def _get_container_sdk_ikey(self, container):
+        sdk_info_file_content = self._container_has_sdk(container)
+
+        return None if sdk_info_file_content is None else sdk_info_file_content.split('=')[1]

@@ -19,6 +19,10 @@ public class TelemetryFactory {
     public Telemetry createEventTelemetry(ContainerStateEvent stateEvent) {
         EventTelemetry telemetry = new EventTelemetry(stateEvent.getName());
 
+        if (!StringUtils.isNullOrEmpty(stateEvent.getInstrumentationKey())) {
+            telemetry.getContext().setInstrumentationKey(stateEvent.getInstrumentationKey());
+        }
+
         // Setting operation in order to be able to correlate events related to the same container.
         String containerId = stateEvent.getProperties().get(com.microsoft.applicationinsights.common.Constants.DOCKER_CONTAINER_ID_PROPERTY_KEY);
         telemetry.getContext().getOperation().setId(containerId);
