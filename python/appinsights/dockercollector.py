@@ -108,6 +108,21 @@ class DockerCollector(object):
             event_data = {'name': event_name, 'ikey': ikey_to_send_event if ikey_to_send_event is not None else '', 'properties': properties}
             self._send_event(event_data)
 
+    def remove_old_containers(current_containers, new_containers):
+        """
+
+            :rtype : dict
+            """
+        curr_containers_ids = {c['Id']: c for c in new_containers}
+        keys = [k for k in current_containers]
+        for key in [key for key in keys if key not in curr_containers_ids]:
+            if current_containers[key]['unregistered'] is None:
+                current_containers[key]['unregistered'] = time.time()
+            else:
+                if current_containers[key]['unregistered'] < time.time() - 60:
+                    del current_containers[key]
+        return current_containers
+
     def _container_has_sdk(self, container):
         try:
             result = self._docker_wrapper.run_command(container,
@@ -127,30 +142,29 @@ class DockerCollector(object):
             return None
 
     def _update_containers_state(self, containers):
-        # TODO: should not remove right away - when stoping container we still want to send the stop event to the ikey, but the container is removed.
-        # self._remove_old_containers(containers)
+        self._containers_state = DockerCollector.remove_old_containers(self._containers_state, containers)
         with concurrent.futures.ThreadPoolExecutor(max_workers=max(len(containers), 30)) as executor:
             list(executor.map(lambda c: self._update_container_state(c), containers))
-
-    def _remove_old_containers(self, containers):
-        curr_containers = {c['Id']: c for c in containers}
-        keys = [k for k in self._containers_state]
-        for key in [key for key in keys if key not in curr_containers]:
-            del self._containers_state[key]
 
     def _update_container_state(self, container):
         id = container['Id']
         if id not in self._containers_state:
-            time.sleep(5)
-            ikey = self._get_container_sdk_ikey(container)
-            self._containers_state[id] = {'ikey': ikey, 'time': time.time(), 'container': container}
-            return ikey
+            for i in range(5):
+                ikey = self._get_container_sdk_ikey(container)
+                self._containers_state[id] = {'ikey': ikey, 'registered': time.time(), 'unregistered': None, 'container': container}
+
+                if ikey is not None:
+                    return ikey
+
+                time.sleep(1)
+
+            return None
 
         status = self._containers_state[id]
         if status['ikey'] is not None:
             return status['ikey']
 
-        if status['time'] > time.time() - 60:
+        if status['registered'] > time.time() - 60:
             ikey = self._get_container_sdk_ikey(container)
             status['ikey'] = ikey
             return ikey

@@ -1,3 +1,5 @@
+import time
+
 __author__ = 'galha'
 
 import unittest
@@ -145,3 +147,19 @@ class TestDockerCollector(unittest.TestCase):
                 collector.collect_stats_and_send()
                 self.assertEqual(len(metrics), len(events))
                 self.assertEqual(3, len(events))
+
+    def test_old_container_is_not_removed_immediately(self):
+        new_containers = [{'Id':'c2','ikey':'k2', 'unregistered': None}]
+        current_containers = {'c1': {'Id':'c1','ikey':'k1', 'unregistered': time.time()}}
+
+        updated_containers = DockerCollector.remove_old_containers(current_containers, new_containers)
+
+        self.assertEqual(current_containers['c1']['Id'], updated_containers['c1']['Id'])
+
+    def test_old_container_is_removed_after_threshold(self):
+        new_containers = [{'Id':'c2','ikey':'k2', 'unregistered': None}]
+        current_containers = {'c1': {'Id':'c1','ikey':'k1', 'unregistered': time.time() - 70}}
+
+        updated_containers = DockerCollector.remove_old_containers(current_containers, new_containers)
+
+        self.assertTrue(len(updated_containers) == 0)
