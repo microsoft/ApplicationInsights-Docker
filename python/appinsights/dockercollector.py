@@ -12,7 +12,7 @@ class DockerCollector(object):
     used to collect data from the docker remote API (events, and performance counters)
     """
 
-    _cmd_template = "/bin/sh -c \"[ -f {file} ] && echo yes || echo no\""
+    _cmd_template = "/bin/sh -c \"[ -f {file} ] && cat {file}\""
 
     def _default_print(text):
         print(text, flush=True)
@@ -54,7 +54,7 @@ class DockerCollector(object):
         containers = self._docker_wrapper.get_containers()
         self._update_containers_state(containers=containers)
         containers_without_sdk = [v['container'] for k, v in self._containers_state.items() if
-                                  k == self._my_container_id or not v['sdk']]
+                                  k == self._my_container_id or v['ikey'] is None]
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max(len(containers), 30)) as executor:
             container_stats = list(
@@ -84,6 +84,9 @@ class DockerCollector(object):
             event_name = event_name_template.format(status)
             inspect = self._docker_wrapper.get_inspection(event)
             properties = dockerconvertors.get_container_properties_from_inspect(inspect, host_name)
+
+            ikey_to_send_event = self._get_container_sdk_ikey_from_containers_state(properties['docker-container-id'])
+
             properties['docker-status'] = status
             properties['docker-Created'] = inspect['Created']
             properties['docker-StartedAt'] = inspect['State']['StartedAt']
@@ -102,42 +105,80 @@ class DockerCollector(object):
                 properties['docker-duration-minutes'] = duration_seconds / 60
                 properties['docker-duration-hours'] = duration_seconds / 3600
                 properties['docker-duration-days'] = duration_seconds / 86400
-            event_data = {'name': event_name, 'properties': properties}
+            event_data = {'name': event_name, 'ikey': ikey_to_send_event if ikey_to_send_event is not None else '', 'properties': properties}
             self._send_event(event_data)
 
-    def _container_has_sdk(self, container):
+    @staticmethod
+    def remove_old_containers(current_containers, new_containers):
+        """
+            This function removes all old containers that have been stopped.
+
+            :param current_containers: The containers currently in cache.
+            :param new_containers: The latest containers collection.
+            :rtype : dict
+            """
+        curr_containers_ids = {c['Id']: c for c in new_containers}
+        keys = [k for k in current_containers]
+        for key in [key for key in keys if key not in curr_containers_ids]:
+            if current_containers[key]['unregistered'] is None:
+                current_containers[key]['unregistered'] = time.time()
+            else:
+                if current_containers[key]['unregistered'] < time.time() - 60:
+                    del current_containers[key]
+
+        return current_containers
+
+    def _get_container_sdk_info(self, container):
         try:
             result = self._docker_wrapper.run_command(container,
                                                       DockerCollector._cmd_template.format(file=self._sdk_file))
             result = result.strip()
-            return result == 'yes'
+
+            return result if result != '' else None
         except DockerWrapperError:
-            return False
+            return None
+
+    def _get_container_sdk_ikey_from_containers_state(self, container_id):
+        if container_id not in self._containers_state.keys():
+            containers = self._docker_wrapper.get_containers()
+            self._update_containers_state(containers=containers)
+
+        if container_id in self._containers_state.keys():
+            return self._containers_state[container_id]['ikey']
+        else:
+            return None
 
     def _update_containers_state(self, containers):
-        self._remove_old_containers(containers)
+        self._containers_state = DockerCollector.remove_old_containers(self._containers_state, containers)
         with concurrent.futures.ThreadPoolExecutor(max_workers=max(len(containers), 30)) as executor:
             list(executor.map(lambda c: self._update_container_state(c), containers))
-
-    def _remove_old_containers(self, containers):
-        curr_containers = {c['Id']: c for c in containers}
-        keys = [k for k in self._containers_state]
-        for key in [key for key in keys if key not in curr_containers]:
-            del self._containers_state[key]
 
     def _update_container_state(self, container):
         id = container['Id']
         if id not in self._containers_state:
-            sdk = self._container_has_sdk(container)
-            self._containers_state[id] = {'sdk': sdk, 'time': time.time(), 'container': container}
-            return sdk
+            for i in range(5):
+                ikey = self._get_container_sdk_ikey(container)
+                self._containers_state[id] = {'ikey': ikey, 'registered': time.time(), 'unregistered': None, 'container': container}
+
+                if ikey is not None:
+                    return ikey
+
+                time.sleep(1)
+
+            return None
+
         status = self._containers_state[id]
-        if status['sdk']:
-            return True
+        if status['ikey'] is not None:
+            return status['ikey']
 
-        if status['time'] > time.time() - 60:
-            sdk = self._container_has_sdk(container)
-            status['sdk'] = sdk
-            return sdk
+        if status['registered'] > time.time() - 60:
+            ikey = self._get_container_sdk_ikey(container)
+            status['ikey'] = ikey
+            return ikey
 
-        return False
+        return None
+
+    def _get_container_sdk_ikey(self, container):
+        sdk_info_file_content = self._get_container_sdk_info(container)
+
+        return None if sdk_info_file_content is None else sdk_info_file_content.split('=')[1]

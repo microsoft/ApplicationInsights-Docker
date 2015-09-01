@@ -22,7 +22,7 @@ collect_interval = args.collect_interval
 methods = {'collect': lambda: program.run_collect_performance_counters(docker_socket=_docker_socket, sdk_file=_sdk_info_file, docker_info_file=_docker_info_path, collect_interval=collect_interval),
            'inject': lambda: program.run_injector(docker_socket=_docker_socket, docker_info_path=_docker_info_path),
            'custom': lambda: os.system(script),
-           'events': lambda : program.run_collect_containers_events(docker_socket=_docker_socket, docker_info_file=_docker_info_path)}
+           'events': lambda : program.run_collect_containers_events(docker_socket=_docker_socket, docker_info_file=_docker_info_path, sdk_file=_sdk_info_file)}
 
 assert method in methods
 methods[method]()

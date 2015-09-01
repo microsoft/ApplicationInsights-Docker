@@ -28,14 +28,14 @@ def run_collect_performance_counters(docker_socket, sdk_file, docker_info_file, 
         collector.collect_stats_and_send()
         time.sleep(float(collect_interval))
 
-def run_collect_containers_events(docker_socket, docker_info_file):
+def run_collect_containers_events(docker_socket, docker_info_file, sdk_file):
     docker_wrapper=get_production_docker_wrapper(base_url=docker_socket)
     docker_injector  = DockerInjector(docker_wrapper=docker_wrapper, docker_info_path=docker_info_file)
     collector = DockerCollector(
         docker_wrapper=docker_wrapper,
         docker_injector=docker_injector,
         samples_in_each_metric=5,
-        sdk_file=None)
+        sdk_file=sdk_file)
     while True:
         try:
             collector.collect_container_events()

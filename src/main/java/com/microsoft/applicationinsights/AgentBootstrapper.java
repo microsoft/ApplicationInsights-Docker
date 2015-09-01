@@ -18,22 +18,28 @@ import java.util.HashMap;
  */
 public class AgentBootstrapper {
 
+    // region Consts
+
+    private static final int DEFAULT_COLLECT_INTERVAL = 45;
+    private static final String CONTAINER_USAGE_COMMAND =
+            "docker run -v /var/run/docker.sock:/docker.sock -d ai-develop ikey=<Instrumentation_Key>";
+
+    // endregion Consts
+
     // region Public
 
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("Starting Application Insights Docker agent.");
+        HashMap<String, String> argumentsMap = parseArguments(args);
 
-        if (args.length == 0) {
-            // TODO: print 'Usage: ...'
-            System.out.println("Instrumentation key is mandatory (ikey).");
+        String instrumentationKey = argumentsMap.get("ikey");
+        if (instrumentationKey == null) {
+            System.out.println("Usage: " + CONTAINER_USAGE_COMMAND);
 
             return;
         }
 
-        HashMap<String, String> argumentsMap = parseArguments(args);
-
         // TODO: Create object for argument verification (type, existence, default value etc.)
-        String instrumentationKey = argumentsMap.get("ikey");
         ApplicationInsightsSender applicationInsightsSender = new ApplicationInsightsSender(instrumentationKey);
 
         int sampleRateFromArgument = getSampleRateFromArgument(argumentsMap);
@@ -56,7 +62,7 @@ public class AgentBootstrapper {
         final String intervalArgument = "collect-interval";
         String sampleIntervalStr = argumentsMap.get(intervalArgument);
 
-        int sampleInterval = 60;
+        int sampleInterval = DEFAULT_COLLECT_INTERVAL;
         if (sampleIntervalStr != null) {
             try {
                 sampleInterval = (int)Double.parseDouble(sampleIntervalStr);
@@ -98,7 +104,9 @@ public class AgentBootstrapper {
 
         for (String arg : args) {
             String[] kv = arg.split("=");
-            arguments.put(kv[0], kv[1]);
+            if (kv.length == 2) {
+                arguments.put(kv[0], kv[1]);
+            }
         }
 
         return arguments;

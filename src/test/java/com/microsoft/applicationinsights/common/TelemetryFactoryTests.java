@@ -57,6 +57,25 @@ public class TelemetryFactoryTests {
         Assert.assertEquals(com.microsoft.applicationinsights.internal.perfcounter.Constants.TOTAL_MEMORY_PC_COUNTER_NAME, telemetry.getCounterName());
     }
 
+    @Test
+    public void testEventTelemetryUpdatedWithInstrumentationKeyIfProvided() {
+        ContainerStateEvent containerStateEvent = new ContainerStateEvent(TestConstants.DEFAULT_STATE_EVENT);
+
+        EventTelemetry eventTelemetry = (EventTelemetry)this.telemetryFactoryUnderTest.createEventTelemetry(containerStateEvent);
+
+        Assert.assertEquals("instrumentation_key", eventTelemetry.getContext().getInstrumentationKey());
+    }
+
+    @Test
+    public void testEventTelemetryNotUpdatedWithInstrumentationKeyIfNotProvided() {
+        String stateEventJsonWithoutIkey = TestConstants.DEFAULT_STATE_EVENT.replace("instrumentation_key", "");
+        ContainerStateEvent containerStateEvent = new ContainerStateEvent(stateEventJsonWithoutIkey);
+
+        EventTelemetry eventTelemetry = (EventTelemetry)this.telemetryFactoryUnderTest.createEventTelemetry(containerStateEvent);
+
+        Assert.assertEquals(null, eventTelemetry.getContext().getInstrumentationKey());
+    }
+
     private Telemetry createPerformanceCounterTelemetryAccordingToMetricName(String counterName) {
 
         String metric = String.format(METRIC_TEMPLATE, counterName, "some_host", "some_image", "some_con_name", "some_con_id");

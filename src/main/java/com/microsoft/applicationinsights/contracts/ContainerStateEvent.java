@@ -12,12 +12,23 @@ import java.util.Map;
  */
 public class ContainerStateEvent {
 
+    // region Members
+
     private String eventName;
+    private String ikey;
     private Map<String, String> properties = new HashMap<String, String>();
+
+    // endregion Members
+
+    // region Ctor
 
     public ContainerStateEvent(String json) {
         this.deserialize(json);
     }
+
+    // endregion Ctor
+
+    // region Public
 
     public String getName() {
         return this.eventName;
@@ -27,9 +38,18 @@ public class ContainerStateEvent {
         return this.properties;
     }
 
+    public String getInstrumentationKey() {
+        return ikey;
+    }
+
+    // endregion Public
+
+    // region Private
+
     private void deserialize(String json) {
         JsonObject jsonObj = new JsonParser().parse(json).getAsJsonObject();
         this.eventName = jsonObj.get("name").getAsString();
+        this.ikey = jsonObj.get("ikey").getAsString();
 
         JsonObject propertiesObject = jsonObj.getAsJsonObject("properties");
 
@@ -37,4 +57,6 @@ public class ContainerStateEvent {
             this.properties.put(kv.getKey(), kv.getValue().getAsString());
         }
     }
+
+    // endregion Private
 }

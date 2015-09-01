@@ -1,3 +1,5 @@
+import time
+
 __author__ = 'galha'
 
 import unittest
@@ -11,7 +13,7 @@ class TestDockerCollector(unittest.TestCase):
         events = []
         properties = {'p1':'v1','p2':'v2'}
         metrics = ['m1','m2','m3']
-        containers = [{'Id':'c1'}, {'Id':'c2'}, {'Id':'c3'}]
+        containers = [{'Id':'c1','ikey':'k1'}, {'Id':'c2','ikey':'k2'}, {'Id':'c3','ikey':'k3'}]
         stats = ['s1','s2','s3']
         host_name = 'host'
         with patch('appinsights.dockerconvertors.get_container_properties') as properties_mock:
@@ -22,6 +24,7 @@ class TestDockerCollector(unittest.TestCase):
                 wrapper_mock.get_host_name.return_value = host_name
                 wrapper_mock.get_containers.return_value = containers
                 wrapper_mock.get_stats.return_value = stats
+                wrapper_mock.run_command.return_value = ''
                 injector_mock = Mock()
                 injector_mock.get_my_container_id.return_value = 'c1'
                 collector = DockerCollector(wrapper_mock, injector_mock, 3, lambda x: events.append(x))
@@ -47,7 +50,7 @@ class TestDockerCollector(unittest.TestCase):
                 wrapper_mock.get_host_name.return_value = host_name
                 wrapper_mock.get_containers.return_value = containers
                 wrapper_mock.get_stats.return_value = stats
-                wrapper_mock.run_command.return_value = 'no'
+                wrapper_mock.run_command.return_value = ''
                 injector_mock = Mock()
                 injector_mock.get_my_container_id.return_value = 'c1'
                 collector = DockerCollector(wrapper_mock, injector_mock, 3, lambda x: events.append(x))
@@ -69,7 +72,7 @@ class TestDockerCollector(unittest.TestCase):
                 wrapper_mock.get_host_name.return_value = host_name
                 wrapper_mock.get_containers.return_value = containers
                 wrapper_mock.get_stats.return_value = stats
-                wrapper_mock.run_command.return_value = 'no'
+                wrapper_mock.run_command.return_value = ''
                 injector_mock=Mock()
                 injector_mock.get_my_container_id.return_value = 'c1'
                 collector = DockerCollector(wrapper_mock, injector_mock ,3, lambda x: events.append(x))
@@ -91,7 +94,7 @@ class TestDockerCollector(unittest.TestCase):
                 wrapper_mock.get_host_name.return_value = host_name
                 wrapper_mock.get_containers.return_value = containers
                 wrapper_mock.get_stats.return_value = stats
-                wrapper_mock.run_command.return_value = 'yes'
+                wrapper_mock.run_command.return_value = 'InstrumentationKey=ikey'
                 injector_mock = Mock()
                 injector_mock.get_my_container_id.return_value = 'c1'
                 collector = DockerCollector(wrapper_mock, injector_mock,3, lambda x: events.append(x))
@@ -137,10 +140,26 @@ class TestDockerCollector(unittest.TestCase):
                 wrapper_mock.get_host_name.return_value = host_name
                 wrapper_mock.get_containers.return_value = containers
                 wrapper_mock.get_stats.return_value = stats
-                wrapper_mock.run_command.return_value = 'yes'
+                wrapper_mock.run_command.return_value = 'InstrumentationKey=ikey'
                 injector_mock = Mock()
                 injector_mock.get_my_container_id.return_value = 'c1'
                 collector = DockerCollector(wrapper_mock, injector_mock, 3, lambda x: events.append(x))
                 collector.collect_stats_and_send()
                 self.assertEqual(len(metrics), len(events))
                 self.assertEqual(3, len(events))
+
+    def test_old_container_is_not_removed_immediately(self):
+        new_containers = [{'Id':'c2','ikey':'k2', 'unregistered': None}]
+        current_containers = {'c1': {'Id':'c1','ikey':'k1', 'unregistered': time.time()}}
+
+        updated_containers = DockerCollector.remove_old_containers(new_containers)
+
+        self.assertEqual(current_containers['c1']['Id'], updated_containers['c1']['Id'])
+
+    def test_old_container_is_removed_after_threshold(self):
+        new_containers = [{'Id':'c2','ikey':'k2', 'unregistered': None}]
+        current_containers = {'c1': {'Id':'c1','ikey':'k1', 'unregistered': time.time() - 70}}
+
+        updated_containers = DockerCollector.remove_old_containers(new_containers)
+
+        self.assertTrue(len(updated_containers) == 0)
