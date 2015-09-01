@@ -152,7 +152,7 @@ class TestDockerCollector(unittest.TestCase):
         new_containers = [{'Id':'c2','ikey':'k2', 'unregistered': None}]
         current_containers = {'c1': {'Id':'c1','ikey':'k1', 'unregistered': time.time()}}
 
-        updated_containers = DockerCollector.remove_old_containers(current_containers, new_containers)
+        updated_containers = DockerCollector.remove_old_containers(new_containers)
 
         self.assertEqual(current_containers['c1']['Id'], updated_containers['c1']['Id'])
 
@@ -160,6 +160,6 @@ class TestDockerCollector(unittest.TestCase):
         new_containers = [{'Id':'c2','ikey':'k2', 'unregistered': None}]
         current_containers = {'c1': {'Id':'c1','ikey':'k1', 'unregistered': time.time() - 70}}
 
-        updated_containers = DockerCollector.remove_old_containers(current_containers, new_containers)
+        updated_containers = DockerCollector.remove_old_containers(new_containers)
 
         self.assertTrue(len(updated_containers) == 0)

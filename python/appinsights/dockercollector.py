@@ -108,9 +108,13 @@ class DockerCollector(object):
             event_data = {'name': event_name, 'ikey': ikey_to_send_event if ikey_to_send_event is not None else '', 'properties': properties}
             self._send_event(event_data)
 
+    @staticmethod
     def remove_old_containers(current_containers, new_containers):
         """
+            This function removes all old containers that have been stopped.
 
+            :param current_containers: The containers currently in cache.
+            :param new_containers: The latest containers collection.
             :rtype : dict
             """
         curr_containers_ids = {c['Id']: c for c in new_containers}
@@ -121,20 +125,23 @@ class DockerCollector(object):
             else:
                 if current_containers[key]['unregistered'] < time.time() - 60:
                     del current_containers[key]
+
         return current_containers
 
-    def _container_has_sdk(self, container):
+    def _get_container_sdk_info(self, container):
         try:
             result = self._docker_wrapper.run_command(container,
                                                       DockerCollector._cmd_template.format(file=self._sdk_file))
             result = result.strip()
+
             return result if result != '' else None
         except DockerWrapperError:
             return None
 
     def _get_container_sdk_ikey_from_containers_state(self, container_id):
-        containers = self._docker_wrapper.get_containers()
-        self._update_containers_state(containers=containers)
+        if container_id not in self._containers_state.keys():
+            containers = self._docker_wrapper.get_containers()
+            self._update_containers_state(containers=containers)
 
         if container_id in self._containers_state.keys():
             return self._containers_state[container_id]['ikey']
@@ -172,6 +179,6 @@ class DockerCollector(object):
         return None
 
     def _get_container_sdk_ikey(self, container):
-        sdk_info_file_content = self._container_has_sdk(container)
+        sdk_info_file_content = self._get_container_sdk_info(container)
 
         return None if sdk_info_file_content is None else sdk_info_file_content.split('=')[1]
