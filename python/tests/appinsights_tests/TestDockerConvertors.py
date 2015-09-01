@@ -109,9 +109,9 @@ class TestDockerConvertors(unittest.TestCase):
             '% Processor Time': {'name': '% Processor Time', 'count': 6, 'value': 36.66666667, 'min': 10, 'max': 100, 'std': 33.26659987},
             'Available Bytes': {'name': 'Available Bytes', 'count': 7, 'value': 6282857.142857143, 'min': 5000000,
              'max': 7000000, 'std': 757225.5121101482},
-            'docker-rx-bytes':{'name': 'docker-rx-bytes', 'count': 6, 'value': 3.833333333, 'min': 0, 'max': 11, 'std': 5.262192192},
-            'docker-tx-bytes': {'name': 'docker-tx-bytes', 'count': 6, 'value': 4.333333333, 'min': 0, 'max': 19, 'std': 7.420691792},
-            'docker-blkio-bytes': {'name': 'docker-blkio-bytes', 'count': 6, 'value': 11.66666667, 'min': 0.1, 'max': 35, 'std': 13.61582413}}
+            'Docker RX Bytes':{'name': 'Docker RX Bytes', 'count': 6, 'value': 3.833333333, 'min': 0, 'max': 11, 'std': 5.262192192},
+            'Docker TX Bytes': {'name': 'Docker TX Bytes', 'count': 6, 'value': 4.333333333, 'min': 0, 'max': 19, 'std': 7.420691792},
+            'Docker Blkio Bytes': {'name': 'Docker Blkio Bytes', 'count': 6, 'value': 11.66666667, 'min': 0.1, 'max': 35, 'std': 13.61582413}}
 
         actual_metrics = dockerconvertors.convert_to_metrics(samples)
 

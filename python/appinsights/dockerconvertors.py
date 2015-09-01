@@ -15,17 +15,17 @@ def convert_to_metrics(stats):
                 stats=stats
             ),
             get_per_second_metric(
-                metric_name='docker-rx-bytes',
+                metric_name='Docker RX Bytes',
                 func=lambda stat: stat['network']['rx_bytes'],
                 stats=stats
             ),
             get_per_second_metric(
-                metric_name='docker-tx-bytes',
+                metric_name='Docker TX Bytes',
                 func=lambda stat: stat['network']['tx_bytes'],
                 stats=stats
             ),
             get_per_second_metric(
-                metric_name='docker-blkio-bytes',
+                metric_name='Docker Blkio Bytes',
                 func= get_total_blkio,
                 stats=stats
             )]
