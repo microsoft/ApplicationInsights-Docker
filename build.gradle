@@ -82,10 +82,21 @@ shadowJar {
 // region Remote deploy
 
 task remoteDeployment {
+    def remoteSettings = System.getenv("DOCKER_REMOTE_SETTINGS_FILE_PATH")
+
+    if (remoteSettings) {
+        Properties props = new Properties()
+        props.load(new FileInputStream(remoteSettings))
+
+        project.ext.machineName = props.get("machineName")
+        project.ext.userName = props.get("userName")
+        project.ext.pass = props.get("pass")
+    } else {
+        ext.requriedProperties = ["machineName", "userName", "pass"]
+    }
+
     group = 'verification'
     description = 'Builds and starts Application Insights container on remote machine.'
-
-    ext.requriedProperties = ["machineName", "userName", "pass"]
 
     // TODO: check plink, pscp installations first.
 
