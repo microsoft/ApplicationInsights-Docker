@@ -82,6 +82,8 @@ shadowJar {
 // region Remote deploy
 
 task remoteDeployment {
+    dependsOn clean
+
     def remoteSettings = System.getenv("DOCKER_REMOTE_SETTINGS_FILE_PATH")
 
     if (remoteSettings) {
@@ -91,6 +93,7 @@ task remoteDeployment {
         project.ext.machineName = props.get("machineName")
         project.ext.userName = props.get("userName")
         project.ext.pass = props.get("pass")
+        project.ext.ikey = props.get("ikey")
     } else {
         ext.requriedProperties = ["machineName", "userName", "pass"]
     }
@@ -103,11 +106,8 @@ task remoteDeployment {
     // TODO: Change after creating specific task for creating the docker folder.
     dependsOn shadowJar
 
-    // TODO: make configurable
     def imageName = "ai-develop-remote";
     def containerName = imageName
-    def ikey = "afc7a861-ab43-472d-9444-a7bd11031080"
-
     def remoteDockerDir = "/remote/docker"
 
     doLast {
