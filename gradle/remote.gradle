@@ -1,0 +1,63 @@
+task remoteDeployment {
+    dependsOn clean
+
+    def remoteSettings = System.getenv("DOCKER_REMOTE_SETTINGS_FILE_PATH")
+
+    if (remoteSettings) {
+        Properties props = new Properties()
+        props.load(new FileInputStream(remoteSettings))
+
+        project.ext.machineName = props.get("machineName")
+        project.ext.userName = props.get("userName")
+        project.ext.pass = props.get("pass")
+        project.ext.ikey = props.get("ikey")
+    } else {
+        ext.requriedProperties = ["machineName", "userName", "pass"]
+    }
+
+    group = 'verification'
+    description = 'Builds and starts Application Insights container on remote machine.'
+
+    // TODO: check plink, pscp installations first.
+
+    // TODO: Change after creating specific task for creating the docker folder.
+    dependsOn shadowJar
+
+    def imageName = "ai-develop-remote";
+    def containerName = imageName
+    def remoteDockerDir = "/remote/docker"
+
+    doLast {
+        logger.info("Deploying image to $userName@$machineName.")
+
+        try
+        {
+            runRemoteCommand("Cleaning exiting remote Docker resources.", "rm -rf $remoteDockerDir")
+            runRemoteCommand("Creating remote Docker folder.", "mkdir $remoteDockerDir")
+            runRemoteCopy("Copying local Docker folder to remote machine.", "$localDockerDir/*", "$userName@$machineName:$remoteDockerDir")
+            runRemoteCommand("Building Docker image on remote machine.", "cd $remoteDockerDir; docker build -t $imageName .")
+            runRemoteCommand("Killing existing container, if exists.", "docker kill $containerName && docker rm $containerName || true")
+            runRemoteCommand("Starting Docker image.", "docker run -v /var/run/docker.sock:/docker.sock --name $containerName -d $imageName ikey=$ikey")
+        }
+        finally
+        {
+            // TODO: anything to finalize?
+        }
+    }
+}
+
+def runRemoteCopy(description, from, into) {
+    logger.info("[runRemoteCopy] $description")
+    exec {
+        executable "pscp.exe"
+        args "-r", "-pw", pass, "\"$from\"", "\"$into\""
+    }
+}
+
+def runRemoteCommand(description, command) {
+    logger.info("[runRemoteCommand] $description")
+    exec {
+        executable "plink.exe"
+        args "-pw", pass, "$userName@$machineName", "\"$command\""
+    }
+}
