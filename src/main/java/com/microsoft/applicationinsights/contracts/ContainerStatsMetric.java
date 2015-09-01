@@ -2,6 +2,7 @@ package com.microsoft.applicationinsights.contracts;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.microsoft.applicationinsights.common.Constants;
 
 /**
  * Created by yonisha on 7/22/2015.
@@ -90,10 +91,10 @@ public class ContainerStatsMetric {
         this.stdDev = metricJson.get("std").getAsDouble();
 
         JsonObject propertiesJson = jsonObj.getAsJsonObject("properties");
-        this.dockerHost = propertiesJson.get("docker-host").getAsString();
-        this.dockerImage = propertiesJson.get("docker-image").getAsString();
-        this.dockerContainerName = propertiesJson.get("docker-container-name").getAsString();
-        this.dockerContainerId = propertiesJson.get("docker-container-id").getAsString();
+        this.dockerHost = propertiesJson.get(Constants.DOCKER_HOST_PROPERTY_KEY).getAsString();
+        this.dockerImage = propertiesJson.get(Constants.DOCKER_IMAGE_PROPERTY_KEY).getAsString();
+        this.dockerContainerName = propertiesJson.get(Constants.DOCKER_CONTAINER_NAME_PROPERTY_KEY).getAsString();
+        this.dockerContainerId = propertiesJson.get(Constants.DOCKER_CONTAINER_ID_PROPERTY_KEY).getAsString();
     }
 
     // endregion Private Methods

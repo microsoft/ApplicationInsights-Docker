@@ -3,6 +3,7 @@ plugins {
 }
 
 apply plugin: 'java'
+apply from: "$rootDir/gradle/remote.gradle"
 
 version = '0.9'
 
@@ -23,15 +24,16 @@ dependencies {
 
 // region Prepare Docker build folder
 
+project.ext.localDockerDir = "$rootDir/build/docker"
 task copyPythonScripts(type: Copy) {
     from "$rootDir/python"
-    into "$rootDir/build/docker/python"
+    into "$localDockerDir/python"
     exclude "**/__pycache__", "**/.idea"
 }
 
 task copyDockerFiles(type: Copy) {
     from "$rootDir/docker"
-    into "$rootDir/build/docker"
+    into localDockerDir
 }
 
 task copyApplicationLibs(type: Copy) {
@@ -40,7 +42,7 @@ task copyApplicationLibs(type: Copy) {
     // TODO: remove when the Java SDK bug will be fixed (config file parsing failed when provided as resource)
     from "$rootDir/sdk"
 
-    into "$rootDir/build/docker"
+    into localDockerDir
 }
 
 // Installing python required libraries.
@@ -66,12 +68,13 @@ tasks.runPythonTests.dependsOn installPythonLibraties
 tasks.test.finalizedBy runPythonTests
 
 // Creating a fat-jar instead of the original one, to be added to the image more easily.
+
+// TODO: create a specific task to prepare docker folder.
 jar.enabled = false
 tasks.shadowJar.finalizedBy copyPythonScripts, copyDockerFiles, copyApplicationLibs
 
 shadowJar {
     classifier = ''
 }
-
 
 // endregion Prepare Docker build folder
