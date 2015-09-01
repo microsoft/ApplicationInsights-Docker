@@ -5,8 +5,6 @@ plugins {
 apply plugin: 'java'
 apply from: "$rootDir/gradle/remote.gradle"
 
-def localDockerDir = "$rootDir/build/docker"
-
 version = '0.9'
 
 repositories {
@@ -26,6 +24,7 @@ dependencies {
 
 // region Prepare Docker build folder
 
+project.ext.localDockerDir = "$rootDir/build/docker"
 task copyPythonScripts(type: Copy) {
     from "$rootDir/python"
     into "$localDockerDir/python"
