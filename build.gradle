@@ -4,6 +4,8 @@ plugins {
 
 apply plugin: 'java'
 
+def localDockerDir = "$rootDir/build/docker"
+
 version = '0.9'
 
 repositories {
@@ -25,13 +27,13 @@ dependencies {
 
 task copyPythonScripts(type: Copy) {
     from "$rootDir/python"
-    into "$rootDir/build/docker/python"
+    into "$localDockerDir/python"
     exclude "**/__pycache__", "**/.idea"
 }
 
 task copyDockerFiles(type: Copy) {
     from "$rootDir/docker"
-    into "$rootDir/build/docker"
+    into localDockerDir
 }
 
 task copyApplicationLibs(type: Copy) {
@@ -40,7 +42,7 @@ task copyApplicationLibs(type: Copy) {
     // TODO: remove when the Java SDK bug will be fixed (config file parsing failed when provided as resource)
     from "$rootDir/sdk"
 
-    into "$rootDir/build/docker"
+    into localDockerDir
 }
 
 // Installing python required libraries.
@@ -66,6 +68,8 @@ tasks.runPythonTests.dependsOn installPythonLibraties
 tasks.test.finalizedBy runPythonTests
 
 // Creating a fat-jar instead of the original one, to be added to the image more easily.
+
+// TODO: create a specific task to prepare docker folder.
 jar.enabled = false
 tasks.shadowJar.finalizedBy copyPythonScripts, copyDockerFiles, copyApplicationLibs
 
@@ -73,5 +77,61 @@ shadowJar {
     classifier = ''
 }
 
-
 // endregion Prepare Docker build folder
+
+// region Remote deploy
+
+task remoteDeployment {
+    group = 'verification'
+    description = 'Builds and starts Application Insights container on remote machine.'
+
+    ext.requriedProperties = ["machineName", "userName", "pass"]
+
+    // TODO: check plink, pscp installations first.
+
+    // TODO: Change after creating specific task for creating the docker folder.
+    dependsOn shadowJar
+
+    // TODO: make configurable
+    def imageName = "ai-develop-remote";
+    def containerName = imageName
+    def ikey = "afc7a861-ab43-472d-9444-a7bd11031080"
+
+    def remoteDockerDir = "/remote/docker"
+
+    doLast {
+        logger.info("Deploying image to $userName@$machineName.")
+
+        try
+        {
+            runRemoteCommand("Cleaning exiting remote Docker resources.", "rm -rf $remoteDockerDir")
+            runRemoteCommand("Creating remote Docker folder.", "mkdir $remoteDockerDir")
+            runRemoteCopy("Copying local Docker folder to remote machine.", "$localDockerDir/*", "$userName@$machineName:$remoteDockerDir")
+            runRemoteCommand("Building Docker image on remote machine.", "cd $remoteDockerDir; docker build -t $imageName .")
+            runRemoteCommand("Killing existing container, if exists.", "docker kill $containerName && docker rm $containerName || true")
+            runRemoteCommand("Starting Docker image.", "docker run -v /var/run/docker.sock:/docker.sock --name $containerName -d $imageName ikey=$ikey")
+        }
+        finally
+        {
+            // TODO: anything to finalize?
+        }
+    }
+}
+
+def runRemoteCopy(description, from, into) {
+    logger.info("[runRemoteCopy] $description")
+    exec {
+        executable "pscp.exe"
+        args "-r", "-pw", pass, "\"$from\"", "\"$into\""
+    }
+}
+
+def runRemoteCommand(description, command) {
+    logger.info("[runRemoteCommand] $description")
+    exec {
+        executable "plink.exe"
+        args "-pw", pass, "$userName@$machineName", "\"$command\""
+    }
+}
+
+// endregion Remote deploy
