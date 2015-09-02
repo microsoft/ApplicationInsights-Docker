@@ -80,7 +80,7 @@ class DockerInjector(object):
         # get the context from the injected file
         with open(self.docker_info_path, mode='r') as f:
             context = f.read()
-            match = re.search('docker-container-id=([a-zA-Z0-9]+)', context)
+            match = re.search('Docker container id=([a-zA-Z0-9]+)', context)
             if match:
                 self._my_container_id = match.group(1)
                 return self._my_container_id

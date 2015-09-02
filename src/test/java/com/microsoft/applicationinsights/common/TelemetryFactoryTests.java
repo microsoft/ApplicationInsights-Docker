@@ -14,7 +14,7 @@ import org.junit.Test;
  */
 public class TelemetryFactoryTests {
 
-    private static final String METRIC_TEMPLATE = "{'metric':{'name':'%s','value':0,'count':0,'min':0,'max':0,'std':0},'properties':{'docker-image':'%s','docker-host':'%s','docker-container-id':'%s','docker-container-name':'%s'}}";
+    private static final String METRIC_TEMPLATE = "{'metric':{'name':'%s','value':0,'count':0,'min':0,'max':0,'std':0},'properties':{'Docker image':'%s','Docker host':'%s','Docker container id':'%s','Docker container name':'%s'}}";
     private TelemetryFactory telemetryFactoryUnderTest = new TelemetryFactory();
 
     @Test

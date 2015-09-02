@@ -14,7 +14,7 @@ public class ContainerStateEventTests {
         ContainerStateEvent containerStateEvent = new ContainerStateEvent(TestConstants.DEFAULT_STATE_EVENT);
 
         Assert.assertEquals("docker-container-state", containerStateEvent.getName());
-        Assert.assertEquals("ubuntu", containerStateEvent.getProperties().get("docker-image"));
+        Assert.assertEquals("ubuntu", containerStateEvent.getProperties().get("Docker image"));
     }
 
     @Test

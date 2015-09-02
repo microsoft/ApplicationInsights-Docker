@@ -110,22 +110,22 @@ def get_container_properties(container, host_name):
     """ Gets the container properties from a container object
     :param container: The container object
     :param host_name: The host name
-    :return: dict of (docker-hst, docker-omage, docker-container-id, docker-container-name)
+    :return: dict of (Docker host, Docker image, Docker container id, Docker container name)
     """
-    return {'docker-host': host_name,
-            'docker-image': container.get('Image', 'N/A'),
-            'docker-container-id': container.get('Id', 'N/A'),
-            'docker-container-name': container.get('Names', ['N/A'])[0]}
+    return {'Docker host': host_name,
+            'Docker image': container.get('Image', 'N/A'),
+            'Docker container id': container.get('Id', 'N/A'),
+            'Docker container name': container.get('Names', ['N/A'])[0]}
 
 
 def get_container_properties_from_inspect(inspect, host_name):
     """ Gets the container properties from an inspect object
     :param inspect: The inspect object
     :param host_name: The host name
-    :return: dict of (docker-hst, docker-omage, docker-container-id, docker-container-name)
+    :return: dict of (Docker host, Docker image, Docker container id, Docker container name)
     """
-    return {'docker-host': host_name,
-            'docker-image': inspect['Config'].get('Image', 'N/A') if 'Config' in inspect else 'N/A',
-            'docker-container-id': inspect.get('Id', 'N/A'),
-            'docker-container-name': inspect.get('Names', [inspect.get('Name', 'N/A')])[0]}
+    return {'Docker host': host_name,
+            'Docker image': inspect['Config'].get('Image', 'N/A') if 'Config' in inspect else 'N/A',
+            'Docker container id': inspect.get('Id', 'N/A'),
+            'Docker container name': inspect.get('Names', [inspect.get('Name', 'N/A')])[0]}
 
