@@ -85,7 +85,7 @@ class DockerCollector(object):
             inspect = self._docker_wrapper.get_inspection(event)
             properties = dockerconvertors.get_container_properties_from_inspect(inspect, host_name)
 
-            ikey_to_send_event = self._get_container_sdk_ikey_from_containers_state(properties['docker-container-id'])
+            ikey_to_send_event = self._get_container_sdk_ikey_from_containers_state(properties['Docker container id'])
 
             properties['docker-status'] = status
             properties['docker-Created'] = inspect['Created']

@@ -23,7 +23,7 @@ class TestDockerInjector(unittest.TestCase):
             self.assertEqual(expected, result)
 
     def test_get_my_container_id_when_file_exists(self):
-        template = 'docker-container-name=/boring_brattain,docker-image=ttt,docker-container-id={0},docker-host=galha-ubuntu'
+        template = 'Docker container name=/boring_brattain,Docker image=ttt,Docker container id={0},Docker host=galha-ubuntu'
         expected_id = 'cd9d134b64807148faa24a17519c8e1a2650b825d4d38944ac54281b2dd1d94e'
         data = template.format(expected_id)
         with patch('os.path.exists') as exists:
@@ -38,7 +38,7 @@ class TestDockerInjector(unittest.TestCase):
                 self.assertEqual(expected_id, id)
 
     def test_get_my_container_id_when_file_exists_with_new_line(self):
-        template = 'docker-container-name=/boring_brattain,docker-image=ttt,docker-host=galha-ubuntu,docker-container-id={0}\n'
+        template = 'Docker container name=/boring_brattain,Docker image=ttt,Docker host=galha-ubuntu,Docker container id={0}\n'
         expected_id = 'cd9d134b64807148faa24a17519c8e1a2650b825d4d38944ac54281b2dd1d94e'
         data = template.format(expected_id)
         with patch('os.path.exists') as exists:
@@ -53,7 +53,7 @@ class TestDockerInjector(unittest.TestCase):
                 self.assertEqual(expected_id, id)
 
     def test_get_my_container_id_when_file_not_exists(self):
-        template = 'docker-container-name=/boring_brattain,docker-image=ttt,docker-container-id={0},docker-host=galha-ubuntu'
+        template = 'Docker container name=/boring_brattain,Docker image=ttt,Docker container id={0},Docker host=galha-ubuntu'
         expected_id = 'cd9d134b64807148faa24a17519c8e1a2650b825d4d38944ac54281b2dd1d94e'
         data = template.format(expected_id)
         with patch('os.path.exists') as exists:
@@ -68,8 +68,8 @@ class TestDockerInjector(unittest.TestCase):
                 self.assertEqual(expected_id, id)
 
     def test_start(self):
-        expected_c1 = {'docker-container-id': 'c1', 'docker-host': 'host', 'docker-container-name': 'name1', 'docker-image': 'image1'}
-        expected_c2 = {'docker-container-id': 'c2', 'docker-host': 'host', 'docker-container-name': 'name2', 'docker-image': 'image2'}
+        expected_c1 = {'Docker container id': 'c1', 'Docker host': 'host', 'Docker container name': 'name1', 'Docker image': 'image1'}
+        expected_c2 = {'Docker container id': 'c2', 'Docker host': 'host', 'Docker container name': 'name2', 'Docker image': 'image2'}
         container = {'Id': 'c1', 'Image':'image1', 'Names':['name1']}
 
         wrapper_mock = Mock()

@@ -28,7 +28,7 @@ import static org.mockito.Mockito.times;
  * Created by yonisha on 7/23/2015.
  */
 public class ApplicationInsightsSenderTests {
-    private final String METRIC_TEMPLATE = "{'metric':{'name':'%s','value':0,'count':0,'min':0,'max':0,'std':0},'properties':{'docker-image':'x','docker-host':'x','docker-container-id':'x','docker-container-name':'x'}}";
+    private final String METRIC_TEMPLATE = "{'metric':{'name':'%s','value':0,'count':0,'min':0,'max':0,'std':0},'properties':{'Docker image':'x','Docker host':'x','Docker container id':'x','Docker container name':'x'}}";
 
     private TelemetryClient telemetryClientMock;
     private ApplicationInsightsSender defaultSenderUnderTest;
