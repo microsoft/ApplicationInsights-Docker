@@ -1,3 +1,24 @@
+#
+# ApplicationInsights-Docker
+# Copyright (c) Microsoft Corporation
+# All rights reserved.
+#
+# MIT License
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this
+# software and associated documentation files (the ""Software""), to deal in the Software
+# without restriction, including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+# persons to whom the Software is furnished to do so, subject to the following conditions:
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+# PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+# FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+#
+
 __author__ = 'galha'
 
 import builtins
@@ -97,12 +118,12 @@ class TestDockerInjector(unittest.TestCase):
             self.assertEqual(2, len(c1_calls))
             self.assertEqual(2, len(c2_calls))
             c1_data = c1_calls[1]['cmd']
-            m1 = re.search('printf ([^>]+)', c1_data)
+            m1 = re.search('printf \'(.+)\'', c1_data)
             self.assertTrue(m1)
             actual_c1= {key:val for key,val in [token.split('=') for token in m1.group(1).strip(' ').split(',')]}
             self.assertDictEqual(expected_c1, actual_c1)
             c2_data = c2_calls[1]['cmd']
-            m2 = re.search('printf ([^>]+)', c2_data)
+            m2 = re.search('printf \'(.+)\'', c2_data)
             self.assertTrue(m2)
             actual_c2= {key:val for key,val in [token.split('=') for token in m2.group(1).strip(' ').split(',')]}
             self.assertDictEqual(expected_c2, actual_c2)
