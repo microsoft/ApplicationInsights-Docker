@@ -1,12 +1,18 @@
-FROM python:3.4
+FROM java
 
-RUN apt-get -y update
-RUN apt-get -y install default-jre
+RUN apt-get -y -qq update
+RUN apt-get -y -qq remove python
+RUN apt-get -y -qq autoremove
+RUN apt-get -y -qq install python3.4
+RUN ln -s /usr/bin/python3.4 /usr/bin/python
 
 # TODO: run a script to install all libraries from requirements.txt
-RUN pip install docker-py
-RUN pip install statistics
-RUN pip install python-dateutil
+RUN apt-get -y -qq install python3-pip
+RUN python -m pip install python-dateutil
+
+# docker-py is dependent on the 'requests' module which currently has a bug. Therefore, the docker-py
+# must be installed last otherwise no other modules can be installed.
+RUN python -m pip install docker-py
 
 COPY . /usr/appinsights/docker
 WORKDIR /usr/appinsights/docker
