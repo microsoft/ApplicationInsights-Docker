@@ -43,7 +43,7 @@ public class AgentBootstrapper {
 
     private static final int DEFAULT_COLLECT_INTERVAL = 45;
     private static final String CONTAINER_USAGE_COMMAND =
-            "docker run -v /var/run/docker.sock:/docker.sock -d ai-develop ikey=<Instrumentation_Key>";
+            "docker run -v /var/run/docker.sock:/docker.sock -d microsoft/applicationinsights ikey=<Instrumentation_Key>";
 
     // endregion Consts
 
