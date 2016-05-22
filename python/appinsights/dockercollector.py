@@ -201,5 +201,9 @@ class DockerCollector(object):
 
     def _get_container_sdk_ikey(self, container):
         sdk_info_file_content = self._get_container_sdk_info(container)
-
-        return None if sdk_info_file_content is None else sdk_info_file_content.split('=')[1]
+        if sdk_info_file_content is None:
+            return None
+        splits = sdk_info_file_content.split('=')
+        if len(splits) < 2:
+            return None
+        return sdk_info_file_content.split('=')[1]

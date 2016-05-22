@@ -69,8 +69,9 @@ class DockerClientWrapper(object):
 
     def get_events(self):
         for event in self._client.events(decode=True):
-            event['Id'] = event['id']
-            yield event
+            if 'id' in event:
+                event['Id'] = event['id']
+                yield event
 
     def get_inspection(self, container):
         try:
