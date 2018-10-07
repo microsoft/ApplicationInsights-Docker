@@ -10,7 +10,7 @@ This repo contains the source code for Application Insights for Docker image.
 For more information, see [Application Insights for Docker image homepage][appinsights-docker-image] in Docker Hub.
 
 
-##Microsoft Open Source Code of Conduct
+## Microsoft Open Source Code of Conduct
 
 
 
