@@ -1,3 +1,5 @@
+This repo is [not currently maintained or supported](https://docs.microsoft.com/en-us/azure/azure-monitor/app/docker) by Microsoft. Check out our official documentation for the latest investments in [container monitoring](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview).
+
 Application Insights for Docker
 ===============================
 
